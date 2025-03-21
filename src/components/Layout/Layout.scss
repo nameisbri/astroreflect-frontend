@@ -1,0 +1,130 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  .header {
+    background-color: $primary;
+    padding: $spacing-md 0;
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 $spacing-md;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      color: white;
+      font-size: $font-size-xl;
+      font-weight: 700;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+
+    .nav {
+      ul {
+        display: flex;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+          margin-left: $spacing-md;
+
+          a {
+            color: rgba(white, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color $transition-fast;
+            padding: $spacing-xs $spacing-sm;
+            border-radius: $border-radius-sm;
+
+            &:hover,
+            &.active {
+              color: white;
+            }
+
+            &.active {
+              background-color: rgba(white, 0.2);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .main-content {
+    flex: 1;
+    padding: $spacing-xl 0;
+    background-color: $background;
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 $spacing-md;
+    }
+  }
+
+  .footer {
+    background-color: $surface;
+    padding: $spacing-md 0;
+    border-top: 1px solid $border-color;
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 $spacing-md;
+
+      p {
+        margin: 0;
+        color: $text-secondary;
+        font-size: $font-size-sm;
+        text-align: center;
+      }
+    }
+  }
+}
+
+// Media queries for responsiveness
+@media (max-width: $breakpoint-md) {
+  .layout {
+    .header {
+      padding: $spacing-sm 0;
+
+      .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .logo {
+        margin-bottom: $spacing-sm;
+      }
+
+      .nav {
+        width: 100%;
+
+        ul {
+          width: 100%;
+          justify-content: space-between;
+
+          li {
+            margin-left: 0;
+          }
+        }
+      }
+    }
+
+    .main-content {
+      padding: $spacing-md 0;
+    }
+  }
+}

@@ -1,0 +1,258 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.transit-card {
+  background-color: $surface;
+  border-radius: $border-radius;
+  box-shadow: $shadow-lg;
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  .transit-card-header {
+    background-color: $primary;
+    color: white;
+    padding: $spacing-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      margin: 0;
+      font-size: $font-size-xl;
+      font-weight: 600;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity $transition-fast;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  .transit-details {
+    padding: $spacing-md;
+    border-bottom: 1px solid $border-color;
+
+    .transit-dates {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: $spacing-md;
+
+      .date-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+
+        &.exact {
+          font-weight: 600;
+          color: $primary;
+        }
+
+        .date-label {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          margin-bottom: $spacing-xs;
+        }
+
+        .date-value {
+          font-size: $font-size-base;
+        }
+      }
+    }
+
+    .transit-status {
+      margin-bottom: $spacing-md;
+
+      .status-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: $spacing-sm;
+
+        .status-label {
+          width: 100px;
+          font-weight: 600;
+          color: $text-secondary;
+        }
+
+        .status-value {
+          flex: 1;
+        }
+
+        .intensity-bar-container {
+          flex: 1;
+          height: 12px;
+          background-color: $border-color;
+          border-radius: 6px;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+
+          .intensity-bar {
+            height: 100%;
+            background-color: $secondary;
+            border-radius: 6px;
+
+            &.high-intensity {
+              background-color: $accent;
+            }
+
+            &.medium-intensity {
+              background-color: $secondary;
+            }
+
+            &.low-intensity {
+              background-color: $color-silver;
+            }
+          }
+
+          .intensity-value {
+            position: absolute;
+            right: $spacing-xs;
+            font-size: $font-size-sm;
+            color: $text-primary;
+          }
+        }
+      }
+    }
+
+    .transit-description {
+      p {
+        line-height: 1.6;
+        color: $text-primary;
+        margin: 0;
+      }
+    }
+  }
+
+  .journal-section {
+    padding: $spacing-md;
+
+    .journal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $spacing-md;
+
+      h3 {
+        margin: 0;
+        color: $text-primary;
+      }
+
+      .add-journal-button {
+        background-color: $accent;
+        color: white;
+        border: none;
+        border-radius: $border-radius-sm;
+        padding: $spacing-xs $spacing-sm;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color $transition-fast;
+
+        &:hover {
+          background-color: darken($accent, 10%);
+        }
+      }
+    }
+
+    .loading,
+    .error,
+    .no-entries {
+      text-align: center;
+      padding: $spacing-md;
+      color: $text-secondary;
+    }
+
+    .error {
+      color: #e74c3c;
+    }
+
+    .journal-entries {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-md;
+
+      .journal-entry {
+        background-color: $background;
+        border-radius: $border-radius-sm;
+        padding: $spacing-md;
+        border-left: 4px solid $secondary;
+
+        .entry-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: $spacing-sm;
+
+          .entry-date {
+            font-size: $font-size-sm;
+            color: $text-secondary;
+          }
+
+          .entry-mood {
+            font-size: $font-size-sm;
+            color: $primary;
+            font-weight: 600;
+          }
+        }
+
+        .entry-content {
+          line-height: 1.6;
+          margin: 0 0 $spacing-sm 0;
+          white-space: pre-line;
+        }
+
+        .entry-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: $spacing-xs;
+
+          .tag {
+            background-color: $primary;
+            color: white;
+            font-size: $font-size-sm;
+            padding: 2px $spacing-xs;
+            border-radius: $border-radius-sm;
+            opacity: 0.8;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Media queries for responsiveness
+@media (max-width: $breakpoint-md) {
+  .transit-card {
+    max-width: 100%;
+    border-radius: 0;
+
+    .transit-dates {
+      flex-direction: column;
+      gap: $spacing-sm;
+
+      .date-item {
+        flex-direction: row;
+        justify-content: space-between;
+
+        .date-label {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}
