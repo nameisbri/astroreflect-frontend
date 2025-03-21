@@ -1,0 +1,176 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.journal-entry-form {
+  background-color: $surface;
+  border-radius: $border-radius;
+  box-shadow: $shadow-lg;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow: hidden;
+
+  .journal-form-header {
+    background-color: $primary;
+    color: white;
+    padding: $spacing-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      margin: 0;
+      font-size: $font-size-xl;
+      font-weight: 600;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity $transition-fast;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  form {
+    padding: $spacing-md;
+
+    .form-group {
+      margin-bottom: $spacing-md;
+
+      label {
+        display: block;
+        margin-bottom: $spacing-xs;
+        font-weight: 600;
+        color: $text-primary;
+      }
+
+      .mood-selector {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-sm;
+
+        select {
+          width: 100%;
+          padding: $spacing-sm;
+          border: 1px solid $border-color;
+          border-radius: $border-radius-sm;
+          background-color: $background;
+          font-size: $font-size-base;
+          color: $text-primary;
+
+          &:focus {
+            outline: none;
+            border-color: $primary;
+            box-shadow: 0 0 0 2px rgba($primary, 0.2);
+          }
+        }
+
+        .custom-mood {
+          input {
+            width: 100%;
+            padding: $spacing-sm;
+            border: 1px solid $border-color;
+            border-radius: $border-radius-sm;
+            background-color: $background;
+            font-size: $font-size-base;
+            color: $text-primary;
+
+            &:focus {
+              outline: none;
+              border-color: $primary;
+              box-shadow: 0 0 0 2px rgba($primary, 0.2);
+            }
+          }
+        }
+      }
+
+      textarea,
+      input[type="text"] {
+        width: 100%;
+        padding: $spacing-sm;
+        border: 1px solid $border-color;
+        border-radius: $border-radius-sm;
+        background-color: $background;
+        font-size: $font-size-base;
+        color: $text-primary;
+        resize: vertical;
+
+        &:focus {
+          outline: none;
+          border-color: $primary;
+          box-shadow: 0 0 0 2px rgba($primary, 0.2);
+        }
+      }
+    }
+
+    .error-message {
+      color: #e74c3c;
+      margin-bottom: $spacing-md;
+      padding: $spacing-sm;
+      background-color: rgba(#e74c3c, 0.1);
+      border-radius: $border-radius-sm;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: $spacing-md;
+
+      button {
+        padding: $spacing-sm $spacing-md;
+        border: none;
+        border-radius: $border-radius-sm;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      .cancel-button {
+        background-color: $color-silver;
+        color: $text-primary;
+
+        &:hover:not(:disabled) {
+          background-color: darken($color-silver, 10%);
+        }
+      }
+
+      .submit-button {
+        background-color: $accent;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background-color: darken($accent, 10%);
+        }
+      }
+    }
+  }
+}
+
+// Media queries for responsiveness
+@media (max-width: $breakpoint-md) {
+  .journal-entry-form {
+    max-width: 100%;
+    border-radius: 0;
+
+    .form-actions {
+      flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
