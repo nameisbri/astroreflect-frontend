@@ -1,34 +1,35 @@
 @use "../../styles/scss/variables" as *;
 @use "../../styles/scss/mixins" as *;
 
-.calendar {
+.week-calendar {
   padding: $spacing-md;
   background-color: $background;
   border-radius: $border-radius;
   box-shadow: $shadow;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
 
   .calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: $spacing-md;
+    margin-bottom: $spacing-lg;
 
     h2 {
       color: $primary;
       font-weight: 600;
       margin: 0;
+      text-align: center;
     }
 
     .calendar-nav-button {
       background-color: $surface;
       border: 1px solid $border-color;
       border-radius: $border-radius-sm;
-      padding: $spacing-xs $spacing-sm;
+      padding: $spacing-xs $spacing-md;
       cursor: pointer;
-      transition: all $transition-fast;
+      transition: all $transition;
 
       &:hover {
         background-color: $primary;
@@ -48,105 +49,386 @@
     color: #e74c3c;
   }
 
-  .calendar-grid {
-    width: 100%;
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: $spacing-sm;
+    margin-bottom: $spacing-xl;
 
-    .calendar-weekdays {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      margin-bottom: $spacing-sm;
+    .week-day {
+      background-color: $surface;
+      border: 1px solid $border-color;
+      border-radius: $border-radius;
+      padding: $spacing-md;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all $transition;
 
-      .weekday {
-        text-align: center;
-        font-weight: 600;
-        padding: $spacing-xs;
-        color: $text-secondary;
+      &:hover {
+        border-color: $primary;
+        box-shadow: $shadow-sm;
       }
-    }
 
-    .calendar-days {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: $spacing-xs;
+      &.current-day {
+        border-color: $primary;
+        background-color: rgba($primary, 0.05);
 
-      .calendar-day {
-        aspect-ratio: 1;
-        border: 1px solid $border-color;
-        border-radius: $border-radius-sm;
-        padding: $spacing-xs;
+        .day-header {
+          color: $primary;
+          font-weight: 600;
+        }
+      }
+
+      &.selected-day {
+        border-color: $accent;
+        background-color: rgba($accent, 0.05);
+        box-shadow: $shadow;
+
+        .day-header {
+          color: $accent;
+          font-weight: 600;
+        }
+      }
+
+      &.has-transits {
         position: relative;
-        cursor: pointer;
-        transition: background-color $transition-fast;
 
-        &:hover {
-          background-color: darken($surface, 3%);
+        &::after {
+          content: "";
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background-color: $accent;
+        }
+      }
+
+      .day-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: $spacing-sm;
+        font-weight: 500;
+
+        .day-name {
+          font-size: $font-size-sm;
         }
 
         .day-number {
+          font-size: $font-size-lg;
+        }
+      }
+
+      .transit-indicators {
+        margin-top: auto;
+        display: flex;
+        flex-wrap: wrap;
+        gap: $spacing-xs;
+
+        .transit-symbol {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 3px 6px;
+          border-radius: $border-radius-sm;
           font-size: $font-size-sm;
-          color: $text-primary;
+          font-weight: 600;
+          color: white;
+          background-color: $secondary;
+
+          &.sun {
+            background-color: $accent;
+          }
+
+          &.moon {
+            background-color: $primary;
+          }
+
+          &.mercury {
+            background-color: $secondary;
+          }
+
+          &.venus {
+            background-color: $color-coral;
+          }
+
+          &.mars {
+            background-color: $color-coral;
+          }
+
+          &.jupiter {
+            background-color: $color-palatinate;
+          }
+
+          &.saturn {
+            background-color: $color-hookers-green;
+          }
+
+          &.uranus {
+            background-color: $color-hookers-green;
+          }
+
+          &.neptune {
+            background-color: $primary;
+          }
+
+          &.pluto {
+            background-color: $color-palatinate;
+          }
         }
 
-        &.current-day {
-          border-color: $primary;
+        .transit-more {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          display: flex;
+          align-items: center;
+          font-weight: 500;
+        }
+      }
+    }
+  }
 
-          .day-number {
+  .selected-day-details {
+    margin-top: $spacing-lg;
+  }
+
+  // Planet positions grid
+  .planet-positions {
+    background-color: $surface;
+    border-radius: $border-radius;
+    padding: $spacing-lg;
+    margin-bottom: $spacing-lg;
+    box-shadow: $shadow;
+
+    h3 {
+      color: $primary;
+      margin-top: 0;
+      margin-bottom: $spacing-lg;
+      border-bottom: 1px solid $border-color;
+      padding-bottom: $spacing-sm;
+    }
+
+    .planet-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: $spacing-md;
+
+      .planet-card {
+        background-color: $background;
+        border-radius: $border-radius;
+        box-shadow: $shadow-sm;
+        padding: $spacing-md;
+        display: flex;
+        flex-direction: column;
+
+        .planet-header {
+          display: flex;
+          align-items: center;
+          margin-bottom: $spacing-md;
+          padding-bottom: $spacing-sm;
+          border-bottom: 1px solid $border-color;
+
+          .planet-symbol {
+            font-size: $font-size-xl;
             color: $primary;
+            margin-right: $spacing-sm;
+            line-height: 1;
+          }
+
+          .planet-name {
+            font-weight: 600;
+            color: $text-primary;
+            flex: 1;
+          }
+
+          .retrograde-status {
+            font-size: $font-size-sm;
+            padding: $spacing-xs;
+            border-radius: $border-radius-sm;
+            font-weight: 500;
+            background-color: rgba($color-coral, 0.1);
+            color: $color-coral;
+          }
+        }
+
+        .position-details {
+          margin-bottom: $spacing-md;
+
+          .position-sign,
+          .position-house {
+            margin-bottom: $spacing-sm;
+
+            .detail-label {
+              font-weight: 600;
+              font-size: $font-size-sm;
+              color: $text-secondary;
+              margin-bottom: $spacing-xs;
+            }
+
+            .detail-value {
+              font-size: $font-size-base;
+              color: $text-primary;
+              margin-bottom: $spacing-xs;
+
+              // Add a bit of space between the symbol and text
+              & > *:first-child {
+                margin-right: $spacing-xs;
+              }
+            }
+
+            .date-range {
+              font-size: $font-size-sm;
+              color: $text-secondary;
+              padding: $spacing-xs;
+              background-color: rgba($primary, 0.05);
+              border-radius: $border-radius-sm;
+            }
+          }
+        }
+
+        .planet-actions {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          gap: $spacing-xs;
+          margin-top: auto;
+
+          button {
+            padding: $spacing-xs;
+            border-radius: $border-radius-sm;
+            border: none;
+            cursor: pointer;
+            font-size: $font-size-sm;
+            font-weight: 500;
+            transition: background-color $transition;
+          }
+
+          .add-journal-button {
+            background-color: $accent;
+            color: white;
+
+            &:hover {
+              background-color: darken($accent, 10%);
+            }
+          }
+
+          .view-entries-button {
+            background-color: $surface;
+            border: 1px solid $border-color;
+
+            &:hover {
+              background-color: darken($surface, 5%);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Aspect transits grid
+  .aspect-transits {
+    background-color: $surface;
+    border-radius: $border-radius;
+    padding: $spacing-lg;
+    box-shadow: $shadow;
+
+    h3 {
+      color: $primary;
+      margin-top: 0;
+      margin-bottom: $spacing-lg;
+      border-bottom: 1px solid $border-color;
+      padding-bottom: $spacing-sm;
+    }
+
+    .no-transits {
+      text-align: center;
+      padding: $spacing-xl;
+      color: $text-secondary;
+      font-style: italic;
+    }
+
+    .transit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: $spacing-md;
+
+      .transit-card {
+        background-color: $background;
+        border-radius: $border-radius;
+        box-shadow: $shadow-sm;
+        overflow: hidden;
+
+        .transit-card-header {
+          background-color: $primary;
+          color: white;
+          padding: $spacing-md;
+
+          h4 {
+            margin: 0;
+            font-size: $font-size-base;
             font-weight: 600;
           }
         }
 
-        &.other-month {
-          opacity: 0.5;
-        }
+        .transit-dates {
+          padding: $spacing-md;
+          border-bottom: 1px solid $border-color;
 
-        .transit-indicators {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 2px;
-          margin-top: $spacing-xs;
+          .date-range,
+          .exact-date {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: $spacing-xs;
+            font-size: $font-size-sm;
 
-          .transit-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: $secondary;
-            cursor: pointer;
-
-            &:hover {
-              transform: scale(1.3);
-            }
-
-            &.sun {
-              background-color: #f39c12; // yellow
-            }
-
-            &.moon {
-              background-color: #3498db; // blue
-            }
-
-            &.mercury {
-              background-color: #2ecc71; // green
-            }
-
-            &.high-intensity {
-              box-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
-            }
-
-            &.applying {
-              border: 1px solid white;
-            }
-
-            &.separating {
-              opacity: 0.7;
+            .date-label {
+              font-weight: 600;
+              color: $text-secondary;
             }
           }
 
-          .transit-more {
-            font-size: 10px;
-            color: $text-secondary;
-            margin-left: auto;
-            margin-top: auto;
+          .exact-date {
+            margin-bottom: 0;
+            color: $primary;
+            font-weight: 500;
+          }
+        }
+
+        .transit-actions {
+          padding: $spacing-md;
+          display: flex;
+          gap: $spacing-sm;
+
+          button {
+            flex: 1;
+            padding: $spacing-xs $spacing-sm;
+            border-radius: $border-radius-sm;
+            border: none;
+            cursor: pointer;
+            font-size: $font-size-sm;
+            font-weight: 500;
+            transition: background-color $transition;
+          }
+
+          .add-journal-button {
+            background-color: $accent;
+            color: white;
+
+            &:hover {
+              background-color: darken($accent, 10%);
+            }
+          }
+
+          .view-entries-button {
+            background-color: $surface;
+            border: 1px solid $border-color;
+
+            &:hover {
+              background-color: darken($surface, 5%);
+            }
           }
         }
       }
@@ -154,16 +436,64 @@
   }
 }
 
-// Media queries for responsiveness
+// Media queries for responsive design
+@media (max-width: $breakpoint-lg) {
+  .week-calendar .planet-positions .planet-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .week-calendar .aspect-transits .transit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: $breakpoint-md) {
-  .calendar {
-    padding: $spacing-sm;
+  .week-calendar .planet-positions .planet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-    .calendar-days {
-      gap: 2px;
+  .week-calendar .week-grid {
+    gap: $spacing-xs;
 
-      .calendar-day {
-        padding: 2px;
+    .week-day {
+      padding: $spacing-sm;
+      min-height: 100px;
+
+      .day-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .week-calendar .planet-positions .planet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .week-calendar .week-grid {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+
+    .week-day {
+      min-height: auto;
+      flex-direction: row;
+      align-items: center;
+      padding: $spacing-sm;
+
+      .day-header {
+        flex-direction: row;
+        margin-bottom: 0;
+        margin-right: $spacing-md;
+        width: 100px;
+      }
+
+      .transit-indicators {
+        margin-top: 0;
+        flex: 1;
       }
     }
   }
