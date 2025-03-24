@@ -21,6 +21,19 @@
       font-weight: 600;
       margin: 0;
       text-align: center;
+      flex: 1;
+    }
+
+    .calendar-nav-left,
+    .calendar-nav-right {
+      display: flex;
+      align-items: center;
+      min-width: 150px;
+    }
+
+    .calendar-nav-right {
+      justify-content: flex-end;
+      gap: $spacing-sm;
     }
 
     .calendar-nav-button {
@@ -34,6 +47,18 @@
       &:hover {
         background-color: $primary;
         color: white;
+      }
+
+      &.today-button {
+        background-color: rgba($accent, 0.1);
+        border-color: $accent;
+        color: $accent;
+        font-weight: 600;
+
+        &:hover {
+          background-color: $accent;
+          color: white;
+        }
       }
     }
   }
@@ -197,81 +222,138 @@
 
   // Planet positions grid
   .planet-positions {
-    background-color: $surface;
+    background-color: transparent;
     border-radius: $border-radius;
-    padding: $spacing-lg;
+    padding: $spacing-md $spacing-sm;
     margin-bottom: $spacing-lg;
-    box-shadow: $shadow;
 
     h3 {
       color: $primary;
       margin-top: 0;
       margin-bottom: $spacing-lg;
-      border-bottom: 1px solid $border-color;
       padding-bottom: $spacing-sm;
+      position: relative;
+      font-size: $font-size-xl;
+
+      &:after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background-color: $primary;
+        border-radius: 2px;
+      }
     }
 
     .planet-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: $spacing-md;
 
       .planet-card {
-        background-color: $background;
-        border-radius: $border-radius;
-        box-shadow: $shadow-sm;
-        padding: $spacing-md;
+        background-color: $surface;
+        border-radius: $border-radius-lg;
+        box-shadow: $shadow;
+        padding: 0;
         display: flex;
         flex-direction: column;
+        transition: transform $transition, box-shadow $transition;
+        overflow: hidden;
+        position: relative;
+
+        &:hover {
+          transform: translateY(-3px);
+          box-shadow: $shadow-lg;
+        }
 
         .planet-header {
           display: flex;
           align-items: center;
-          margin-bottom: $spacing-md;
-          padding-bottom: $spacing-sm;
-          border-bottom: 1px solid $border-color;
+          padding: $spacing-md;
+          border-bottom: 1px solid rgba($border-color, 0.5);
+          background-color: rgba($primary, 0.03);
+          position: relative;
 
           .planet-symbol {
             font-size: $font-size-xl;
             color: $primary;
             margin-right: $spacing-sm;
             line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: rgba($primary, 0.1);
+            border-radius: 50%;
           }
 
           .planet-name {
             font-weight: 600;
             color: $text-primary;
             flex: 1;
+            font-size: $font-size-lg;
           }
 
           .retrograde-status {
             font-size: $font-size-sm;
-            padding: $spacing-xs;
+            padding: $spacing-xs $spacing-sm;
             border-radius: $border-radius-sm;
             font-weight: 500;
             background-color: rgba($color-coral, 0.1);
             color: $color-coral;
           }
+
+          &:after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            height: 1px;
+            width: 100%;
+            background: linear-gradient(to right, $primary, transparent);
+          }
         }
 
         .position-details {
-          margin-bottom: $spacing-md;
+          padding: $spacing-md;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: $spacing-sm;
 
           .position-sign,
-          .position-house {
-            margin-bottom: $spacing-sm;
+          .position-house,
+          .position-retrograde {
+            display: flex;
+            flex-direction: column;
 
             .detail-label {
               font-weight: 600;
               font-size: $font-size-sm;
               color: $text-secondary;
-              margin-bottom: $spacing-xs;
+              margin-bottom: 3px;
+              display: flex;
+              align-items: center;
+
+              &:after {
+                content: "";
+                display: block;
+                height: 1px;
+                flex: 1;
+                background-color: rgba($border-color, 0.5);
+                margin-left: $spacing-sm;
+              }
             }
 
             .detail-value {
               font-size: $font-size-base;
               color: $text-primary;
               margin-bottom: $spacing-xs;
+              font-weight: 500;
+              padding-left: $spacing-xs;
 
               // Add a bit of space between the symbol and text
               & > *:first-child {
@@ -282,28 +364,58 @@
             .date-range {
               font-size: $font-size-sm;
               color: $text-secondary;
-              padding: $spacing-xs;
+              padding: $spacing-xs $spacing-sm;
               background-color: rgba($primary, 0.05);
               border-radius: $border-radius-sm;
+              display: inline-block;
+              border-left: 3px solid $primary;
+              margin-left: $spacing-xs;
+              max-width: fit-content;
+            }
+          }
+
+          .position-house {
+            .detail-value {
+              color: $secondary;
+              font-weight: 500;
+            }
+          }
+
+          .position-retrograde {
+            .retrograde-until {
+              font-size: $font-size-sm;
+              padding: $spacing-xs $spacing-sm;
+              background-color: rgba($color-coral, 0.08);
+              border-radius: $border-radius-sm;
+              display: inline-block;
+              border-left: 3px solid $color-coral;
+              color: $color-coral;
+              font-weight: 500;
+              margin-left: $spacing-xs;
+              max-width: fit-content;
             }
           }
         }
 
         .planet-actions {
           display: flex;
-          flex-direction: column;
-          width: 100%;
-          gap: $spacing-xs;
-          margin-top: auto;
+          padding: $spacing-sm;
+          background-color: rgba($surface, 0.7);
+          border-top: 1px solid rgba($border-color, 0.5);
+          gap: $spacing-sm;
 
           button {
-            padding: $spacing-xs;
+            flex: 1;
+            padding: $spacing-xs $spacing-sm;
             border-radius: $border-radius-sm;
             border: none;
             cursor: pointer;
             font-size: $font-size-sm;
             font-weight: 500;
-            transition: background-color $transition;
+            transition: all $transition;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
 
           .add-journal-button {
@@ -316,11 +428,151 @@
           }
 
           .view-entries-button {
-            background-color: $surface;
-            border: 1px solid $border-color;
+            background-color: rgba($primary, 0.08);
+            color: $primary;
+            border: 1px solid rgba($primary, 0.2);
 
             &:hover {
-              background-color: darken($surface, 5%);
+              background-color: rgba($primary, 0.15);
+            }
+          }
+        }
+
+        // Planet specific styling
+        &.sun-card {
+          .planet-header {
+            background-color: rgba($accent, 0.08);
+            .planet-symbol {
+              background-color: rgba($accent, 0.15);
+              color: $accent;
+            }
+            &:after {
+              background: linear-gradient(to right, $accent, transparent);
+            }
+          }
+        }
+
+        &.moon-card {
+          .planet-header {
+            background-color: rgba($primary, 0.08);
+            .planet-symbol {
+              background-color: rgba($primary, 0.15);
+              color: $primary;
+            }
+            &:after {
+              background: linear-gradient(to right, $primary, transparent);
+            }
+          }
+        }
+
+        &.mercury-card {
+          .planet-header {
+            background-color: rgba($secondary, 0.08);
+            .planet-symbol {
+              background-color: rgba($secondary, 0.15);
+              color: $secondary;
+            }
+            &:after {
+              background: linear-gradient(to right, $secondary, transparent);
+            }
+          }
+        }
+
+        &.venus-card {
+          .planet-header {
+            background-color: rgba($color-coral, 0.08);
+            .planet-symbol {
+              background-color: rgba($color-coral, 0.15);
+              color: $color-coral;
+            }
+            &:after {
+              background: linear-gradient(to right, $color-coral, transparent);
+            }
+          }
+        }
+
+        &.mars-card {
+          .planet-header {
+            background-color: rgba(#e74c3c, 0.08);
+            .planet-symbol {
+              background-color: rgba(#e74c3c, 0.15);
+              color: #e74c3c;
+            }
+            &:after {
+              background: linear-gradient(to right, #e74c3c, transparent);
+            }
+          }
+        }
+
+        &.jupiter-card {
+          .planet-header {
+            background-color: rgba($color-palatinate, 0.08);
+            .planet-symbol {
+              background-color: rgba($color-palatinate, 0.15);
+              color: $color-palatinate;
+            }
+            &:after {
+              background: linear-gradient(
+                to right,
+                $color-palatinate,
+                transparent
+              );
+            }
+          }
+        }
+
+        &.saturn-card {
+          .planet-header {
+            background-color: rgba($color-hookers-green, 0.08);
+            .planet-symbol {
+              background-color: rgba($color-hookers-green, 0.15);
+              color: $color-hookers-green;
+            }
+            &:after {
+              background: linear-gradient(
+                to right,
+                $color-hookers-green,
+                transparent
+              );
+            }
+          }
+        }
+
+        &.uranus-card {
+          .planet-header {
+            background-color: rgba(#3498db, 0.08);
+            .planet-symbol {
+              background-color: rgba(#3498db, 0.15);
+              color: #3498db;
+            }
+            &:after {
+              background: linear-gradient(to right, #3498db, transparent);
+            }
+          }
+        }
+
+        &.neptune-card {
+          .planet-header {
+            background-color: rgba(#9b59b6, 0.08);
+            .planet-symbol {
+              background-color: rgba(#9b59b6, 0.15);
+              color: #9b59b6;
+            }
+            &:after {
+              background: linear-gradient(to right, #9b59b6, transparent);
+            }
+          }
+        }
+
+        &.pluto-card {
+          .planet-header {
+            background-color: rgba(#34495e, 0.08);
+            .planet-symbol {
+              background-color: rgba(#34495e, 0.15);
+              color: #34495e;
+            }
+            &:after {
+              background: linear-gradient(to right, #34495e, transparent);
             }
           }
         }
@@ -377,12 +629,13 @@
           padding: $spacing-md;
           border-bottom: 1px solid $border-color;
 
-          .date-range,
           .exact-date {
             display: flex;
             justify-content: space-between;
-            margin-bottom: $spacing-xs;
+            margin-bottom: $spacing-sm;
             font-size: $font-size-sm;
+            color: $primary;
+            font-weight: 500;
 
             .date-label {
               font-weight: 600;
@@ -390,10 +643,13 @@
             }
           }
 
-          .exact-date {
-            margin-bottom: 0;
-            color: $primary;
-            font-weight: 500;
+          .transit-description {
+            .description-text {
+              font-size: $font-size-sm;
+              line-height: 1.5;
+              color: $text-primary;
+              margin: 0;
+            }
           }
         }
 
@@ -438,20 +694,12 @@
 
 // Media queries for responsive design
 @media (max-width: $breakpoint-lg) {
-  .week-calendar .planet-positions .planet-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
   .week-calendar .aspect-transits .transit-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: $breakpoint-md) {
-  .week-calendar .planet-positions .planet-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .week-calendar .week-grid {
     gap: $spacing-xs;
 
@@ -466,13 +714,42 @@
       }
     }
   }
+
+  .week-calendar .calendar-header {
+    flex-direction: column;
+    gap: $spacing-sm;
+
+    h2 {
+      order: -1;
+      margin-bottom: $spacing-sm;
+    }
+
+    .calendar-nav-left,
+    .calendar-nav-right {
+      width: 100%;
+      justify-content: space-between;
+      min-width: auto;
+    }
+  }
+
+  .week-calendar .planet-positions {
+    .planet-grid {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+
+      .planet-card {
+        .planet-actions {
+          flex-direction: column;
+
+          button {
+            width: 100%;
+          }
+        }
+      }
+    }
+  }
 }
 
 @media (max-width: $breakpoint-sm) {
-  .week-calendar .planet-positions .planet-grid {
-    grid-template-columns: 1fr;
-  }
-
   .week-calendar .week-grid {
     display: flex;
     flex-direction: column;
@@ -495,6 +772,33 @@
         margin-top: 0;
         flex: 1;
       }
+    }
+  }
+
+  .week-calendar .planet-positions {
+    padding: $spacing-sm 0;
+
+    h3 {
+      font-size: $font-size-lg;
+      padding-left: $spacing-sm;
+    }
+
+    .planet-grid {
+      grid-template-columns: 1fr;
+      gap: $spacing-sm;
+
+      .planet-card {
+        border-radius: $spacing-sm;
+        margin: 0 $spacing-sm;
+      }
+    }
+  }
+
+  .week-calendar .aspect-transits {
+    padding: $spacing-md $spacing-sm;
+
+    h3 {
+      font-size: $font-size-lg;
     }
   }
 }
