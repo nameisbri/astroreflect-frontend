@@ -556,7 +556,7 @@ const Calendar = () => {
 
               return (
                 <div
-                  className={`transit-card aspect-${aspectClass}`}
+                  className="transit-card aspect-${aspectClass}"
                   key={index}
                   onClick={() => setSelectedTransit(transit)}
                 >
@@ -591,14 +591,14 @@ const Calendar = () => {
                     </div>
                     <div className="timeline-marks">
                       <div className="start-date">
-                        {formatShortDate(transit.startDate)}
+                        {format(transit.startDate, "MMM d")}
                       </div>
                       <div className="exact-date">
                         <span className="exact-marker">●</span>
                         <span className="exact-label">Exact</span>
                       </div>
                       <div className="end-date">
-                        {formatShortDate(transit.endDate)}
+                        {format(transit.endDate, "MMM d")}
                       </div>
                     </div>
                   </div>
@@ -607,24 +607,9 @@ const Calendar = () => {
                     <div className="exact-date-row">
                       <span className="date-label">Exact:</span>
                       <span className="date-value">
-                        {formatShortDate(transit.exactDate)}
+                        {format(transit.exactDate, "MMM d")}
                       </span>
                     </div>
-
-                    {transit.intensity !== undefined && (
-                      <div className="intensity-row">
-                        <span className="intensity-label">Intensity:</span>
-                        <div className="intensity-bar-container">
-                          <div
-                            className={`intensity-bar ${aspectClass}`}
-                            style={{ width: `${transit.intensity}%` }}
-                          ></div>
-                          <span className="intensity-value">
-                            {Math.round(transit.intensity)}%
-                          </span>
-                        </div>
-                      </div>
-                    )}
 
                     <div className="transit-description">
                       {transit.description && (
@@ -677,19 +662,19 @@ const Calendar = () => {
                   <div className="date-item">
                     <span className="date-label">Start:</span>
                     <span className="date-value">
-                      {formatShortDate(selectedTransit.startDate)}
+                      {format(selectedTransit.startDate, "MMM d")}
                     </span>
                   </div>
                   <div className="date-item exact">
                     <span className="date-label">Exact:</span>
                     <span className="date-value">
-                      {formatShortDate(selectedTransit.exactDate)}
+                      {format(selectedTransit.exactDate, "MMM d")}
                     </span>
                   </div>
                   <div className="date-item">
                     <span className="date-label">End:</span>
                     <span className="date-value">
-                      {formatShortDate(selectedTransit.endDate)}
+                      {format(selectedTransit.endDate, "MMM d")}
                     </span>
                   </div>
                 </div>
@@ -703,21 +688,6 @@ const Calendar = () => {
                       {selectedTransit.timing}
                     </span>
                   </div>
-
-                  {selectedTransit.intensity !== undefined && (
-                    <div className="status-row">
-                      <span className="status-label">Intensity:</span>
-                      <div className="intensity-bar-container">
-                        <div
-                          className={`intensity-bar aspect-${selectedTransit.aspect?.toLowerCase()}`}
-                          style={{ width: `${selectedTransit.intensity}%` }}
-                        ></div>
-                        <span className="intensity-value">
-                          {Math.round(selectedTransit.intensity)}%
-                        </span>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="transit-description-detail">
@@ -791,14 +761,13 @@ const Calendar = () => {
           const dayNumber = day.getDate();
           const isCurrentDay = isToday(day);
           const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
-          const dayTransits = getTransitsForDay(day);
 
           return (
             <div
               key={day.toString()}
               className={`week-day ${isCurrentDay ? "current-day" : ""} ${
                 isSelected ? "selected-day" : ""
-              } ${dayTransits.length > 0 ? "has-transits" : ""}`}
+              } `}
               onClick={() => handleDayClick(day)}
             >
               <div className="day-header">
