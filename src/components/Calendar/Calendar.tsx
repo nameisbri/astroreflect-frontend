@@ -9,18 +9,23 @@ import {
   isSameDay,
   parseISO,
   addDays,
-  addMonths,
 } from "date-fns";
-import { fetchTransits, fetchPlanetPosition } from "../../services/api";
+import { fetchTransits, fetchDailySnapshot } from "../../services/api";
 import "./Calendar.scss";
-import { Transit, Planet, ZodiacSign } from "../../types/astrology";
+import {
+  Transit,
+  Planet,
+  ZodiacSign,
+  PlanetPosition,
+} from "../../types/astrology";
 import { formatShortDate } from "../../utils/dateUtils";
 
 const Calendar = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [transits, setTransits] = useState<Transit[]>([]);
-  const [planetPositions, setPlanetPositions] = useState<any[]>([]);
+  const [planetPositions, setPlanetPositions] = useState<PlanetPosition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingDay, setIsLoadingDay] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedDayTransits, setSelectedDayTransits] = useState<Transit[]>([]);
@@ -52,108 +57,6 @@ const Calendar = () => {
 
     loadTransits();
   }, [currentWeek]);
-
-  // Load planet positions when a day is selected
-  useEffect(() => {
-    const loadPlanetPositions = async () => {
-      if (!selectedDay) return;
-
-      try {
-        // Create placeholder positions for each planet
-        // In a real implementation, you would fetch these from your API
-        const positions = await Promise.all(
-          Object.values(Planet).map(async (planet) => {
-            try {
-              // Attempt to fetch from API
-              const position = await fetchPlanetPosition(planet, selectedDay);
-              return position;
-            } catch (err) {
-              // Fallback to mock data if API fails
-              console.error(`Error fetching position for ${planet}:`, err);
-
-              // Generate realistic date ranges for planet in sign and house
-              const signEntryDate = addDays(
-                selectedDay,
-                -Math.floor(Math.random() * 30) - 1
-              );
-              const signExitDate = addDays(
-                selectedDay,
-                Math.floor(Math.random() * 60) + 1
-              );
-
-              const houseEntryDate = addDays(
-                selectedDay,
-                -Math.floor(Math.random() * 15) - 1
-              );
-              const houseExitDate = addDays(
-                selectedDay,
-                Math.floor(Math.random() * 30) + 1
-              );
-
-              // Generate a realistic house number based on the sign
-              // (Houses roughly correspond to signs, but not exactly)
-              const signIndex = Object.values(ZodiacSign).indexOf(
-                getMockSign(planet) as ZodiacSign
-              );
-              let house = signIndex + 1;
-              // Add some randomness to house placement
-              house = ((house + Math.floor(Math.random() * 3) - 1) % 12) + 1;
-
-              return {
-                planet,
-                sign: {
-                  name: getMockSign(planet),
-                  ruler: getMockRuler(planet),
-                  element: getMockElement(planet),
-                  degreeInSign: Math.random() * 29,
-                  percentInSign: Math.random(),
-                },
-                house,
-                houseDetails: {
-                  entryDate: houseEntryDate,
-                  exitDate: houseExitDate,
-                },
-                signDetails: {
-                  entryDate: signEntryDate,
-                  exitDate: signExitDate,
-                },
-                retrograde: {
-                  isRetrograde: Math.random() > 0.7,
-                  status: Math.random() > 0.7 ? "Retrograde" : "Direct",
-                  speed: Math.random() * 2 - 1,
-                },
-              };
-            }
-          })
-        );
-
-        setPlanetPositions(positions);
-      } catch (err) {
-        console.error("Failed to fetch planet positions:", err);
-      }
-    };
-
-    loadPlanetPositions();
-  }, [selectedDay]);
-
-  // Mock helpers for generating placeholder data
-  const getMockSign = (planet: Planet): string => {
-    const signs = Object.values(ZodiacSign);
-    const index = (Object.values(Planet).indexOf(planet) * 3) % signs.length;
-    return signs[index];
-  };
-
-  const getMockRuler = (planet: Planet): Planet => {
-    const planets = Object.values(Planet);
-    const index = (Object.values(Planet).indexOf(planet) + 2) % planets.length;
-    return planets[index];
-  };
-
-  const getMockElement = (planet: Planet): string => {
-    const elements = ["Fire", "Earth", "Air", "Water"];
-    const index = Object.values(Planet).indexOf(planet) % elements.length;
-    return elements[index];
-  };
 
   // Navigation functions
   const handlePreviousWeek = () => {
@@ -189,13 +92,31 @@ const Calendar = () => {
     });
   };
 
-  // Handle day click
-  const handleDayClick = (day: Date) => {
+  // Handle day click - now uses the daily-snapshot endpoint
+  const handleDayClick = async (day: Date) => {
     setSelectedDay(day);
-    const dayTransits = getTransitsForDay(day);
-    setSelectedDayTransits(dayTransits);
-    console.log(`Selected day: ${format(day, "yyyy-MM-dd")}`);
-    console.log("Transits for selected day:", dayTransits);
+    setIsLoadingDay(true);
+
+    try {
+      // Use the new daily-snapshot endpoint to get both planet positions and transits
+      const snapshot = await fetchDailySnapshot(day);
+
+      // Update state with the fetched data
+      setPlanetPositions(snapshot.positions);
+      setSelectedDayTransits(snapshot.transits);
+
+      console.log(`Selected day: ${format(day, "yyyy-MM-dd")}`);
+      console.log("Daily snapshot:", snapshot);
+    } catch (err) {
+      console.error("Failed to fetch daily snapshot:", err);
+
+      // Fallback to the previous method if the snapshot endpoint fails
+      const dayTransits = getTransitsForDay(day);
+      setSelectedDayTransits(dayTransits);
+      console.log("Fallback - Transits for selected day:", dayTransits);
+    } finally {
+      setIsLoadingDay(false);
+    }
   };
 
   // Get an icon/symbol for the planet
@@ -307,7 +228,14 @@ const Calendar = () => {
 
   // Render the planet positions grid for the selected day
   const renderPlanetPositions = () => {
-    if (!selectedDay || planetPositions.length === 0) return null;
+    if (!selectedDay || planetPositions.length === 0) {
+      if (isLoadingDay) {
+        return (
+          <div className="loading-positions">Loading planet positions...</div>
+        );
+      }
+      return null;
+    }
 
     return (
       <div className="planet-positions">
@@ -334,20 +262,26 @@ const Calendar = () => {
                     {getZodiacSymbol(position.sign?.name || "Aries")}{" "}
                     {position.sign?.name || "Aries"}
                   </div>
-                  <div className="date-range">
-                    {formatShortDate(position.signDetails?.entryDate)} -{" "}
-                    {formatShortDate(position.signDetails?.exitDate)}
-                  </div>
+                  {position.signDuration && (
+                    <div className="date-range">
+                      {formatShortDate(position.signDuration.entryDate)} -{" "}
+                      {formatShortDate(position.signDuration.exitDate)}
+                    </div>
+                  )}
                 </div>
 
-                <div className="position-house">
-                  <div className="detail-label">House:</div>
-                  <div className="detail-value">{position.house || "1"}</div>
-                  <div className="date-range">
-                    {formatShortDate(position.houseDetails?.entryDate)} -{" "}
-                    {formatShortDate(position.houseDetails?.exitDate)}
+                {position.house && (
+                  <div className="position-house">
+                    <div className="detail-label">House:</div>
+                    <div className="detail-value">
+                      {position.house.number || "1"}
+                    </div>
+                    <div className="date-range">
+                      {formatShortDate(position.house.entryDate)} -{" "}
+                      {formatShortDate(position.house.exitDate)}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="planet-actions">
@@ -364,6 +298,10 @@ const Calendar = () => {
   // Render the aspect transits (transits between two planets) for the selected day
   const renderAspectTransits = () => {
     if (!selectedDay) return null;
+
+    if (isLoadingDay) {
+      return <div className="loading-transits">Loading transit details...</div>;
+    }
 
     // Filter to only include two-planet transits
     const aspectTransits = selectedDayTransits.filter(
