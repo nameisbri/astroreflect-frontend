@@ -8,16 +8,10 @@ import {
   addWeeks,
   isSameDay,
   parseISO,
-  addDays,
 } from "date-fns";
 import { fetchTransits, fetchDailySnapshot } from "../../services/api";
 import "./Calendar.scss";
-import {
-  Transit,
-  Planet,
-  ZodiacSign,
-  PlanetPosition,
-} from "../../types/astrology";
+import { Transit, Planet, PlanetPosition } from "../../types/astrology";
 import { formatShortDate } from "../../utils/dateUtils";
 
 const Calendar = () => {
@@ -30,7 +24,7 @@ const Calendar = () => {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedDayTransits, setSelectedDayTransits] = useState<Transit[]>([]);
 
-  // Load transits for the current week
+  // Load transits for the current week and today's details on initial load
   useEffect(() => {
     const loadTransits = async () => {
       setIsLoading(true);
@@ -56,7 +50,20 @@ const Calendar = () => {
     };
 
     loadTransits();
+
+    // If it's the initial load (when currentWeek is today's week), load today's data
+    if (!selectedDay) {
+      const today = new Date();
+      loadDailyData(today);
+    }
   }, [currentWeek]);
+
+  // Function to navigate to today
+  const handleTodayClick = () => {
+    const today = new Date();
+    setCurrentWeek(today);
+    loadDailyData(today);
+  };
 
   // Navigation functions
   const handlePreviousWeek = () => {
@@ -92,31 +99,46 @@ const Calendar = () => {
     });
   };
 
-  // Handle day click - now uses the daily-snapshot endpoint
-  const handleDayClick = async (day: Date) => {
+  // Load daily data for a specific day
+  const loadDailyData = async (day: Date) => {
     setSelectedDay(day);
     setIsLoadingDay(true);
 
     try {
-      // Use the new daily-snapshot endpoint to get both planet positions and transits
+      // Use the daily-snapshot endpoint to get both planet positions and transits
       const snapshot = await fetchDailySnapshot(day);
 
-      // Update state with the fetched data
-      setPlanetPositions(snapshot.positions);
-      setSelectedDayTransits(snapshot.transits);
+      // Check if data is valid
+      if (snapshot && Array.isArray(snapshot.positions)) {
+        setPlanetPositions(snapshot.positions);
+      } else {
+        setPlanetPositions([]);
+        console.warn("No planet positions returned from API");
+      }
 
-      console.log(`Selected day: ${format(day, "yyyy-MM-dd")}`);
-      console.log("Daily snapshot:", snapshot);
+      if (snapshot && Array.isArray(snapshot.transits)) {
+        setSelectedDayTransits(snapshot.transits);
+      } else {
+        // Fallback to the previous method if no transits in snapshot
+        const dayTransits = getTransitsForDay(day);
+        setSelectedDayTransits(dayTransits);
+      }
+
+      console.log(`Loaded data for: ${format(day, "yyyy-MM-dd")}`);
     } catch (err) {
       console.error("Failed to fetch daily snapshot:", err);
-
       // Fallback to the previous method if the snapshot endpoint fails
       const dayTransits = getTransitsForDay(day);
       setSelectedDayTransits(dayTransits);
-      console.log("Fallback - Transits for selected day:", dayTransits);
+      setPlanetPositions([]);
     } finally {
       setIsLoadingDay(false);
     }
+  };
+
+  // Handle day click
+  const handleDayClick = (day: Date) => {
+    loadDailyData(day);
   };
 
   // Get an icon/symbol for the planet
@@ -146,6 +168,48 @@ const Calendar = () => {
       "Opposition": "☍",
     };
     return aspectSymbols[aspect] || aspect.charAt(0);
+  };
+
+  // Get ordinal suffix for numbers (1st, 2nd, 3rd, etc.)
+  const getOrdinalSuffix = (num: number): string => {
+    const j = num % 10;
+    const k = num % 100;
+
+    if (j === 1 && k !== 11) {
+      return "st";
+    }
+    if (j === 2 && k !== 12) {
+      return "nd";
+    }
+    if (j === 3 && k !== 13) {
+      return "rd";
+    }
+    return "th";
+  };
+
+  // Estimate the direct date for a retrograde planet if not provided
+  const estimateDirectDate = (planet: Planet): Date => {
+    const today = new Date();
+    // Approximate durations of retrograde periods in days
+    const retrogradeDurations: Record<Planet, number> = {
+      [Planet.MERCURY]: 24,
+      [Planet.VENUS]: 42,
+      [Planet.MARS]: 72,
+      [Planet.JUPITER]: 120,
+      [Planet.SATURN]: 140,
+      [Planet.URANUS]: 155,
+      [Planet.NEPTUNE]: 158,
+      [Planet.PLUTO]: 160,
+      [Planet.SUN]: 0, // Sun and Moon don't go retrograde
+      [Planet.MOON]: 0,
+    };
+
+    // Add half the retrograde duration to today to estimate when it goes direct
+    // Assuming we're roughly in the middle of the retrograde period
+    const duration = retrogradeDurations[planet] || 0;
+    const result = new Date(today);
+    result.setDate(result.getDate() + Math.floor(duration / 2));
+    return result;
   };
 
   // Get a symbol for the zodiac sign
@@ -198,8 +262,8 @@ const Calendar = () => {
             title={`${transit.planetA} ${transit.aspect} ${transit.planetB}`}
           >
             {getPlanetSymbol(transit.planetA)}
-            {getAspectSymbol(transit.aspect || "")}
-            {getPlanetSymbol(transit.planetB || Planet.SUN)}
+            {transit.aspect && getAspectSymbol(transit.aspect)}
+            {transit.planetB && getPlanetSymbol(transit.planetB)}
           </div>
         ))}
         {dayTransits.length > 3 && (
@@ -243,53 +307,68 @@ const Calendar = () => {
           Planet Positions for {format(selectedDay, "EEEE, MMMM d, yyyy")}
         </h3>
         <div className="planet-grid">
-          {planetPositions.map((position, index) => (
-            <div key={index} className="planet-card">
-              <div className="planet-header">
-                <div className="planet-symbol">
-                  {getPlanetSymbol(position.planet)}
-                </div>
-                <div className="planet-name">{position.planet}</div>
-                <div className="retrograde-status">
-                  {position.retrograde?.isRetrograde ? "Retrograde" : "Direct"}
-                </div>
-              </div>
+          {planetPositions.map((position, index) => {
+            // Determine planet-specific class for styling
+            const planetClass = `${position.planet.toLowerCase()}-card`;
 
-              <div className="position-details">
-                <div className="position-sign">
-                  <div className="detail-label">Sign:</div>
-                  <div className="detail-value">
-                    {getZodiacSymbol(position.sign?.name || "Aries")}{" "}
-                    {position.sign?.name || "Aries"}
+            return (
+              <div key={index} className={`planet-card ${planetClass}`}>
+                <div className="planet-header">
+                  <div className="planet-symbol">
+                    {getPlanetSymbol(position.planet)}
                   </div>
-                  {position.signDuration && (
-                    <div className="date-range">
-                      {formatShortDate(position.signDuration.entryDate)} -{" "}
-                      {formatShortDate(position.signDuration.exitDate)}
+                  <div className="planet-name">{position.planet}</div>
+                  {position.retrograde?.isRetrograde && (
+                    <div className="retrograde-status">Retrograde</div>
+                  )}
+                </div>
+
+                <div className="position-details">
+                  <div className="position-sign">
+                    <div className="detail-label">Sign</div>
+                    <div className="detail-value">
+                      {getZodiacSymbol(position.sign?.name || "Aries")}{" "}
+                      {position.sign?.name || "Aries"}{" "}
+                      {position.sign?.degreeInSign
+                        ? `(${Math.floor(position.sign.degreeInSign)}°)`
+                        : ""}
+                    </div>
+                    {position.signDuration && (
+                      <div className="date-range">
+                        In {position.sign?.name} until{" "}
+                        {formatShortDate(position.signDuration.exitDate)}
+                      </div>
+                    )}
+                  </div>
+
+                  {position.house && (
+                    <div className="position-house">
+                      <div className="detail-label">House</div>
+                      <div className="detail-value">
+                        {position.house.number || "1"}
+                        {getOrdinalSuffix(position.house.number || 1)} House
+                      </div>
+                    </div>
+                  )}
+
+                  {position.retrograde?.isRetrograde && (
+                    <div className="position-retrograde">
+                      <div className="detail-label">Retrograde</div>
+                      <div className="retrograde-until">
+                        Until{" "}
+                        {formatShortDate(estimateDirectDate(position.planet))}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {position.house && (
-                  <div className="position-house">
-                    <div className="detail-label">House:</div>
-                    <div className="detail-value">
-                      {position.house.number || "1"}
-                    </div>
-                    <div className="date-range">
-                      {formatShortDate(position.house.entryDate)} -{" "}
-                      {formatShortDate(position.house.exitDate)}
-                    </div>
-                  </div>
-                )}
+                <div className="planet-actions">
+                  <button className="add-journal-button">Add Entry</button>
+                  <button className="view-entries-button">View Entries</button>
+                </div>
               </div>
-
-              <div className="planet-actions">
-                <button className="add-journal-button">Add Entry</button>
-                <button className="view-entries-button">View Entries</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
@@ -328,16 +407,14 @@ const Calendar = () => {
                 </h4>
               </div>
               <div className="transit-dates">
-                <div className="date-range">
-                  <span className="date-label">Active:</span>
-                  <span>
-                    {formatShortDate(transit.startDate)} -{" "}
-                    {formatShortDate(transit.endDate)}
-                  </span>
-                </div>
                 <div className="exact-date">
                   <span className="date-label">Exact:</span>
                   <span>{formatShortDate(transit.exactDate)}</span>
+                </div>
+                <div className="transit-description">
+                  {transit.description && (
+                    <p className="description-text">{transit.description}</p>
+                  )}
                 </div>
               </div>
               <div className="transit-actions">
@@ -358,16 +435,26 @@ const Calendar = () => {
   return (
     <div className="week-calendar">
       <div className="calendar-header">
-        <button className="calendar-nav-button" onClick={handlePreviousWeek}>
-          &lt; Previous Week
-        </button>
+        <div className="calendar-nav-left">
+          <button className="calendar-nav-button" onClick={handlePreviousWeek}>
+            &lt; Previous Week
+          </button>
+        </div>
         <h2>
           {format(startOfWeek(currentWeek, { weekStartsOn: 1 }), "MMM d")} -{" "}
           {format(endOfWeek(currentWeek, { weekStartsOn: 1 }), "MMM d, yyyy")}
         </h2>
-        <button className="calendar-nav-button" onClick={handleNextWeek}>
-          Next Week &gt;
-        </button>
+        <div className="calendar-nav-right">
+          <button
+            className="calendar-nav-button today-button"
+            onClick={handleTodayClick}
+          >
+            Today
+          </button>
+          <button className="calendar-nav-button" onClick={handleNextWeek}>
+            Next Week &gt;
+          </button>
+        </div>
       </div>
 
       {isLoading && <div className="loading">Loading transits...</div>}
