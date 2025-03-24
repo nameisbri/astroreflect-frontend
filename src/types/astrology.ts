@@ -99,19 +99,40 @@ export interface Interpretation {
   opportunities: string[];
 }
 
+export interface HouseInfo {
+  number: number;
+  cusp: number;
+  ruler: Planet;
+  entryDate: Date | string;
+  exitDate: Date | string;
+}
+
+export interface SignDuration {
+  entryDate: Date | string;
+  exitDate: Date | string;
+}
+
 export interface PlanetPosition {
   planet: Planet;
   longitude: number;
   latitude: number;
   distance: number;
   speed: number;
-  speedDetails: {
+  speedDetails?: {
     longitude: number;
     latitude: number;
   };
   sign: SignInfo;
   retrograde: RetrogradeInfo;
-  interpretation: Interpretation;
+  interpretation?: Interpretation;
+  house?: HouseInfo;
+  signDuration?: SignDuration;
+}
+
+export interface DailySnapshot {
+  date: string;
+  positions: PlanetPosition[];
+  transits: Transit[];
 }
 
 export interface JournalEntry {

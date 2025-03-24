@@ -252,3 +252,36 @@ export const searchJournalEntries = async (
 
   return data.entries || [];
 };
+
+// Add this function to src/services/api.ts
+export const fetchDailySnapshot = async (
+  date?: Date
+): Promise<{
+  date: string;
+  positions: PlanetPosition[];
+  transits: Transit[];
+}> => {
+  const params = new URLSearchParams();
+
+  if (date) {
+    params.append("date", date.toISOString());
+  }
+
+  const url = `${API_URL}/ephemeris/daily-snapshot${
+    params.toString() ? `?${params.toString()}` : ""
+  }`;
+
+  try {
+    const response = await fetch(url);
+    const data = await handleResponse(response);
+    return data;
+  } catch (error) {
+    console.error("Error fetching daily snapshot:", error);
+    // Return mock data structure for development
+    return {
+      date: new Date().toISOString(),
+      positions: [], // You might want to add mock positions here
+      transits: MOCK_TRANSITS,
+    };
+  }
+};
