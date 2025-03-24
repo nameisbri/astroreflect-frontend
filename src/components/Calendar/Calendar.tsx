@@ -23,6 +23,8 @@ const Calendar = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedDayTransits, setSelectedDayTransits] = useState<Transit[]>([]);
+  const [selectedTransit, setSelectedTransit] = useState<Transit | null>(null);
+  const [aspectFilter, setAspectFilter] = useState<string>("all");
 
   // Load transits for the current week and today's details on initial load
   useEffect(() => {
@@ -374,60 +376,384 @@ const Calendar = () => {
     );
   };
 
+  // Get detailed interpretation for a transit
+  const getDetailedInterpretation = (
+    planetA: Planet,
+    aspect: string,
+    planetB: Planet
+  ): string => {
+    // This function would ideally contain interpretations for different planet-aspect combinations
+    // For now, we'll return a generic interpretation based on the aspect type
+
+    const aspectInterpretations: Record<string, string> = {
+      "Conjunction": `When ${planetA} and ${planetB} join forces, their energies merge and intensify. This creates a potent blend of their qualities, bringing focus and emphasis to matters ruled by both planets. This is a time for new beginnings related to these planetary energies.`,
+
+      "Trine": `${planetA} and ${planetB} are in a harmonious flow, creating ease and opportunity. Their energies support each other, bringing natural talents and favorable conditions. This aspect helps you access the positive qualities of both planets with minimal effort.`,
+
+      "Square": `${planetA} and ${planetB} are in a challenging relationship, creating tension and friction. This dynamic aspect pushes you to take action and overcome obstacles, potentially leading to significant growth through resolving the conflict between these planetary energies.`,
+
+      "Opposition": `${planetA} and ${planetB} face each other across the zodiac, creating a polarizing effect. This aspect brings awareness through contrast and the need for balance. You may experience tension between the principles these planets represent, requiring integration and compromise.`,
+
+      "Sextile": `${planetA} forms a supportive angle with ${planetB}, offering opportunities for growth and development. This aspect creates a gentle flow of energy between the planets, providing resources and chances to build upon. Taking initiative during this time can lead to positive outcomes.`,
+    };
+
+    return (
+      aspectInterpretations[aspect] ||
+      `This ${aspect} between ${planetA} and ${planetB} brings their energies together in a specific pattern. Pay attention to themes related to both planets in your life during this period.`
+    );
+  };
+
   // Render the aspect transits (transits between two planets) for the selected day
   const renderAspectTransits = () => {
     if (!selectedDay) return null;
 
     if (isLoadingDay) {
-      return <div className="loading-transits">Loading transit details...</div>;
+      return (
+        <div className="loading-transits">
+          <div className="loading-spinner"></div>
+          <p>Loading transit details...</p>
+        </div>
+      );
     }
 
-    // Filter to only include two-planet transits
+    // Filter to only include two-planet transits (aspects)
     const aspectTransits = selectedDayTransits.filter(
       (transit) => transit.planetB
     );
 
     if (aspectTransits.length === 0) {
       return (
-        <div className="no-transits">
-          No planetary aspects on {format(selectedDay, "EEEE, MMMM d, yyyy")}
+        <div className="aspect-transits">
+          <div className="aspect-header">
+            <h3>Planetary Aspects</h3>
+          </div>
+          <div className="no-transits">
+            <div className="empty-state-icon">○</div>
+            <p>
+              No planetary aspects on{" "}
+              {format(selectedDay, "EEEE, MMMM d, yyyy")}
+            </p>
+            <p className="empty-state-subtext">
+              Check another day or adjust your filter settings
+            </p>
+          </div>
         </div>
       );
     }
 
+    // Filter transits based on selected aspect type
+    const filteredTransits =
+      aspectFilter === "all"
+        ? aspectTransits
+        : aspectTransits.filter(
+            (transit) => transit.aspect?.toLowerCase() === aspectFilter
+          );
+
+    // Get unique aspect types for the filter
+    const aspectTypes = Array.from(
+      new Set(aspectTransits.map((transit) => transit.aspect))
+    ).filter(Boolean);
+
+    // Sort transits by intensity (if available) or by planet importance
+    const sortedTransits = [...filteredTransits].sort((a, b) => {
+      // First by intensity if available
+      if (a.intensity !== undefined && b.intensity !== undefined) {
+        return b.intensity - a.intensity;
+      }
+
+      // Then by timing (Active > Applying > Separating > Upcoming)
+      const timingOrder: Record<string, number> = {
+        "Active": 0,
+        "Applying": 1,
+        "Separating": 2,
+        "Upcoming": 3,
+      };
+
+      const timingA = a.timing ? timingOrder[a.timing] || 4 : 4;
+      const timingB = b.timing ? timingOrder[b.timing] || 4 : 4;
+
+      if (timingA !== timingB) {
+        return timingA - timingB;
+      }
+
+      // Finally by planet importance
+      return getPlanetImportance(a.planetA) - getPlanetImportance(b.planetA);
+    });
+
     return (
       <div className="aspect-transits">
-        <h3>Planetary Aspects</h3>
-        <div className="transit-grid">
-          {aspectTransits.map((transit, index) => (
-            <div className="transit-card" key={index}>
-              <div className="transit-card-header">
-                <h4>
-                  {transit.planetA} {transit.aspect} {transit.planetB}
-                </h4>
-              </div>
-              <div className="transit-dates">
-                <div className="exact-date">
-                  <span className="date-label">Exact:</span>
-                  <span>{formatShortDate(transit.exactDate)}</span>
+        <div className="aspect-header">
+          <h3>Planetary Aspects</h3>
+          <div className="aspect-filters">
+            <button
+              className={`filter-button ${
+                aspectFilter === "all" ? "active" : ""
+              }`}
+              onClick={() => setAspectFilter("all")}
+            >
+              All
+            </button>
+            {aspectTypes.map((aspect) => (
+              <button
+                key={aspect}
+                className={`filter-button ${
+                  aspectFilter === aspect?.toLowerCase() ? "active" : ""
+                } aspect-${aspect?.toLowerCase()}`}
+                onClick={() => setAspectFilter(aspect?.toLowerCase())}
+              >
+                {getAspectSymbol(aspect || "")} {aspect}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {filteredTransits.length === 0 ? (
+          <div className="no-transits">
+            <p>No {aspectFilter} aspects found on this day</p>
+            <button
+              className="reset-filter-button"
+              onClick={() => setAspectFilter("all")}
+            >
+              Show all aspects
+            </button>
+          </div>
+        ) : (
+          <div className="transit-grid">
+            {sortedTransits.map((transit, index) => {
+              // Determine the aspect color class
+              const aspectClass = transit.aspect?.toLowerCase() || "";
+
+              // Determine the timing badge
+              const timingBadge = transit.timing || "Unknown";
+
+              // Calculate dates for display
+              const exactDate =
+                typeof transit.exactDate === "string"
+                  ? parseISO(transit.exactDate)
+                  : transit.exactDate;
+
+              const startDate =
+                typeof transit.startDate === "string"
+                  ? parseISO(transit.startDate)
+                  : transit.startDate;
+
+              const endDate =
+                typeof transit.endDate === "string"
+                  ? parseISO(transit.endDate)
+                  : transit.endDate;
+
+              // Calculate progress through transit (as percentage)
+              const today = new Date();
+              let progressPercent = 0;
+
+              if (today >= startDate && today <= endDate) {
+                const totalDuration = endDate.getTime() - startDate.getTime();
+                const elapsed = today.getTime() - startDate.getTime();
+                progressPercent = Math.floor((elapsed / totalDuration) * 100);
+              } else if (today > endDate) {
+                progressPercent = 100;
+              }
+
+              return (
+                <div
+                  className={`transit-card aspect-${aspectClass}`}
+                  key={index}
+                  onClick={() => setSelectedTransit(transit)}
+                >
+                  <div className={`transit-card-header ${aspectClass}`}>
+                    <div className="planet-symbols">
+                      <span className="planet-symbol">
+                        {getPlanetSymbol(transit.planetA)}
+                      </span>
+                      <span className="aspect-symbol">
+                        {getAspectSymbol(transit.aspect || "")}
+                      </span>
+                      <span className="planet-symbol">
+                        {getPlanetSymbol(transit.planetB || Planet.SUN)}
+                      </span>
+                    </div>
+                    <h4>
+                      {transit.planetA} {transit.aspect} {transit.planetB}
+                    </h4>
+                    <div
+                      className={`timing-badge ${timingBadge.toLowerCase()}`}
+                    >
+                      {timingBadge}
+                    </div>
+                  </div>
+
+                  <div className="transit-progress">
+                    <div className="progress-bar">
+                      <div
+                        className={`progress-fill ${aspectClass}`}
+                        style={{ width: `${progressPercent}%` }}
+                      ></div>
+                    </div>
+                    <div className="timeline-marks">
+                      <div className="start-date">
+                        {formatShortDate(transit.startDate)}
+                      </div>
+                      <div className="exact-date">
+                        <span className="exact-marker">●</span>
+                        <span className="exact-label">Exact</span>
+                      </div>
+                      <div className="end-date">
+                        {formatShortDate(transit.endDate)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="transit-content">
+                    <div className="exact-date-row">
+                      <span className="date-label">Exact:</span>
+                      <span className="date-value">
+                        {formatShortDate(transit.exactDate)}
+                      </span>
+                    </div>
+
+                    {transit.intensity !== undefined && (
+                      <div className="intensity-row">
+                        <span className="intensity-label">Intensity:</span>
+                        <div className="intensity-bar-container">
+                          <div
+                            className={`intensity-bar ${aspectClass}`}
+                            style={{ width: `${transit.intensity}%` }}
+                          ></div>
+                          <span className="intensity-value">
+                            {Math.round(transit.intensity)}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="transit-description">
+                      {transit.description && (
+                        <p className="description-text">
+                          {transit.description.length > 120
+                            ? `${transit.description.slice(0, 120)}...`
+                            : transit.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="transit-actions">
+                    <button className={`add-journal-button ${aspectClass}`}>
+                      <span className="action-icon">✎</span>
+                      Add Journal Entry
+                    </button>
+                    <button className="view-entries-button">
+                      <span className="action-icon">▤</span>
+                      View Entries
+                    </button>
+                  </div>
                 </div>
-                <div className="transit-description">
-                  {transit.description && (
-                    <p className="description-text">{transit.description}</p>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Transit Detail Modal */}
+        {selectedTransit && (
+          <div className="transit-detail-modal">
+            <div className="modal-content">
+              <div
+                className={`modal-header aspect-${selectedTransit.aspect?.toLowerCase()}`}
+              >
+                <h3>
+                  {selectedTransit.planetA} {selectedTransit.aspect}{" "}
+                  {selectedTransit.planetB}
+                </h3>
+                <button
+                  className="close-button"
+                  onClick={() => setSelectedTransit(null)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="modal-body">
+                <div className="transit-dates-detail">
+                  <div className="date-item">
+                    <span className="date-label">Start:</span>
+                    <span className="date-value">
+                      {formatShortDate(selectedTransit.startDate)}
+                    </span>
+                  </div>
+                  <div className="date-item exact">
+                    <span className="date-label">Exact:</span>
+                    <span className="date-value">
+                      {formatShortDate(selectedTransit.exactDate)}
+                    </span>
+                  </div>
+                  <div className="date-item">
+                    <span className="date-label">End:</span>
+                    <span className="date-value">
+                      {formatShortDate(selectedTransit.endDate)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="transit-status-detail">
+                  <div className="status-row">
+                    <span className="status-label">Status:</span>
+                    <span
+                      className={`status-value ${selectedTransit.timing?.toLowerCase()}`}
+                    >
+                      {selectedTransit.timing}
+                    </span>
+                  </div>
+
+                  {selectedTransit.intensity !== undefined && (
+                    <div className="status-row">
+                      <span className="status-label">Intensity:</span>
+                      <div className="intensity-bar-container">
+                        <div
+                          className={`intensity-bar aspect-${selectedTransit.aspect?.toLowerCase()}`}
+                          style={{ width: `${selectedTransit.intensity}%` }}
+                        ></div>
+                        <span className="intensity-value">
+                          {Math.round(selectedTransit.intensity)}%
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
-              <div className="transit-actions">
-                <button className="add-journal-button">
-                  Add Journal Entry
-                </button>
-                <button className="view-entries-button">
-                  View Past Entries
-                </button>
+
+                <div className="transit-description-detail">
+                  <h4>Description</h4>
+                  <p>{selectedTransit.description}</p>
+                </div>
+
+                <div className="transit-interpretation">
+                  <h4>Astrological Meaning</h4>
+                  <p>
+                    {getDetailedInterpretation(
+                      selectedTransit.planetA,
+                      selectedTransit.aspect || "",
+                      selectedTransit.planetB || Planet.SUN
+                    )}
+                  </p>
+                </div>
+
+                <div className="journal-section">
+                  <div className="journal-header">
+                    <h4>Journal Entries</h4>
+                    <button
+                      className={`add-journal-button aspect-${selectedTransit.aspect?.toLowerCase()}`}
+                    >
+                      Add Entry
+                    </button>
+                  </div>
+
+                  <div className="journal-placeholder">
+                    <p>No journal entries for this transit yet</p>
+                  </div>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     );
   };

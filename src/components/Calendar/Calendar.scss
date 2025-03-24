@@ -580,31 +580,149 @@
     }
   }
 
-  // Aspect transits grid
+  // Aspect transits section - improved version
   .aspect-transits {
     background-color: $surface;
     border-radius: $border-radius;
     padding: $spacing-lg;
     box-shadow: $shadow;
+    margin-bottom: $spacing-xl;
 
-    h3 {
-      color: $primary;
-      margin-top: 0;
+    .aspect-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: $spacing-lg;
-      border-bottom: 1px solid $border-color;
-      padding-bottom: $spacing-sm;
+      flex-wrap: wrap;
+      gap: $spacing-sm;
+
+      h3 {
+        color: $primary;
+        margin: 0;
+        font-size: $font-size-xl;
+        font-weight: 600;
+        min-width: 200px;
+      }
+
+      .aspect-filters {
+        display: flex;
+        gap: $spacing-xs;
+        flex-wrap: wrap;
+
+        .filter-button {
+          padding: $spacing-xs $spacing-sm;
+          border-radius: $border-radius-sm;
+          border: 1px solid $border-color;
+          background-color: $background;
+          font-size: $font-size-sm;
+          cursor: pointer;
+          transition: all $transition-fast;
+
+          &:hover {
+            background-color: rgba($primary, 0.05);
+          }
+
+          &.active {
+            background-color: $primary;
+            color: white;
+            border-color: $primary;
+          }
+
+          // Aspect-specific styling when active
+          &.aspect-conjunction.active {
+            background-color: #5e35b1; // Violet for conjunctions
+            border-color: #5e35b1;
+          }
+
+          &.aspect-trine.active {
+            background-color: #2e7d32; // Green for trines
+            border-color: #2e7d32;
+          }
+
+          &.aspect-square.active {
+            background-color: #c62828; // Red for squares
+            border-color: #c62828;
+          }
+
+          &.aspect-opposition.active {
+            background-color: #ad1457; // Pink for oppositions
+            border-color: #ad1457;
+          }
+
+          &.aspect-sextile.active {
+            background-color: #0277bd; // Blue for sextiles
+            border-color: #0277bd;
+          }
+        }
+      }
     }
 
     .no-transits {
       text-align: center;
       padding: $spacing-xl;
       color: $text-secondary;
-      font-style: italic;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: $spacing-md;
+
+      .empty-state-icon {
+        font-size: 48px;
+        color: $border-color;
+        margin-bottom: $spacing-sm;
+      }
+
+      p {
+        margin: 0;
+        &.empty-state-subtext {
+          font-size: $font-size-sm;
+          opacity: 0.7;
+        }
+      }
+
+      .reset-filter-button {
+        margin-top: $spacing-md;
+        padding: $spacing-xs $spacing-md;
+        background-color: rgba($primary, 0.1);
+        border: 1px solid $primary;
+        color: $primary;
+        border-radius: $border-radius-sm;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+          background-color: rgba($primary, 0.2);
+        }
+      }
+    }
+
+    .loading-transits {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: $spacing-xl;
+      color: $text-secondary;
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba($primary, 0.2);
+        border-radius: 50%;
+        border-top-color: $primary;
+        animation: spin 1s linear infinite;
+        margin-bottom: $spacing-md;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
     }
 
     .transit-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: $spacing-md;
 
       .transit-card {
@@ -612,51 +730,289 @@
         border-radius: $border-radius;
         box-shadow: $shadow-sm;
         overflow: hidden;
+        transition: transform $transition, box-shadow $transition;
+        cursor: pointer;
+        position: relative;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: $shadow;
+        }
 
         .transit-card-header {
-          background-color: $primary;
-          color: white;
           padding: $spacing-md;
+          color: white;
+          position: relative;
+
+          .planet-symbols {
+            display: flex;
+            justify-content: center;
+            gap: $spacing-sm;
+            margin-bottom: $spacing-xs;
+            font-size: $font-size-xl;
+
+            .planet-symbol {
+              width: 36px;
+              height: 36px;
+              background-color: rgba(255, 255, 255, 0.2);
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+
+            .aspect-symbol {
+              align-self: center;
+              font-size: $font-size-lg;
+            }
+          }
 
           h4 {
             margin: 0;
+            text-align: center;
             font-size: $font-size-base;
             font-weight: 600;
           }
+
+          .timing-badge {
+            position: absolute;
+            top: $spacing-sm;
+            right: $spacing-sm;
+            font-size: $font-size-sm;
+            padding: 2px $spacing-xs;
+            border-radius: $border-radius-sm;
+            background-color: rgba(255, 255, 255, 0.3);
+
+            &.active {
+              background-color: rgba(255, 255, 255, 0.6);
+              font-weight: 600;
+            }
+
+            &.applying {
+              background-color: rgba(255, 255, 255, 0.4);
+            }
+
+            &.separating {
+              background-color: rgba(255, 255, 255, 0.25);
+            }
+
+            &.upcoming {
+              background-color: rgba(255, 255, 255, 0.15);
+            }
+          }
+
+          // Aspect-specific styling
+          &.conjunction {
+            background: linear-gradient(
+              135deg,
+              #5e35b1,
+              #7e57c2
+            ); // Violet gradient for conjunctions
+          }
+
+          &.trine {
+            background: linear-gradient(
+              135deg,
+              #2e7d32,
+              #4caf50
+            ); // Green gradient for trines
+          }
+
+          &.square {
+            background: linear-gradient(
+              135deg,
+              #c62828,
+              #e53935
+            ); // Red gradient for squares
+          }
+
+          &.opposition {
+            background: linear-gradient(
+              135deg,
+              #ad1457,
+              #d81b60
+            ); // Pink gradient for oppositions
+          }
+
+          &.sextile {
+            background: linear-gradient(
+              135deg,
+              #0277bd,
+              #039be5
+            ); // Blue gradient for sextiles
+          }
         }
 
-        .transit-dates {
-          padding: $spacing-md;
-          border-bottom: 1px solid $border-color;
+        .transit-progress {
+          padding: $spacing-xs $spacing-md;
+          background-color: rgba($border-color, 0.1);
 
-          .exact-date {
+          .progress-bar {
+            height: 6px;
+            background-color: $border-color;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+
+            .progress-fill {
+              height: 100%;
+              border-radius: 3px;
+
+              // Aspect-specific colors
+              &.conjunction {
+                background-color: #5e35b1; // Violet for conjunctions
+              }
+
+              &.trine {
+                background-color: #2e7d32; // Green for trines
+              }
+
+              &.square {
+                background-color: #c62828; // Red for squares
+              }
+
+              &.opposition {
+                background-color: #ad1457; // Pink for oppositions
+              }
+
+              &.sextile {
+                background-color: #0277bd; // Blue for sextiles
+              }
+            }
+          }
+
+          .timeline-marks {
+            display: flex;
+            justify-content: space-between;
+            font-size: $font-size-sm;
+            color: $text-secondary;
+            margin-top: $spacing-xs;
+            position: relative;
+
+            .start-date,
+            .end-date {
+              flex-shrink: 0;
+              max-width: 80px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .exact-date {
+              position: absolute;
+              left: 50%;
+              transform: translateX(-50%);
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+
+              .exact-marker {
+                color: $primary;
+                font-size: 10px;
+                margin-bottom: 2px;
+              }
+
+              .exact-label {
+                font-weight: 500;
+                font-size: 10px;
+              }
+            }
+          }
+        }
+
+        .transit-content {
+          padding: $spacing-md;
+
+          .exact-date-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: $spacing-sm;
             font-size: $font-size-sm;
-            color: $primary;
-            font-weight: 500;
 
             .date-label {
-              font-weight: 600;
               color: $text-secondary;
+              font-weight: 500;
+            }
+
+            .date-value {
+              font-weight: 600;
+            }
+          }
+
+          .intensity-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: $spacing-sm;
+
+            .intensity-label {
+              width: 80px;
+              font-size: $font-size-sm;
+              color: $text-secondary;
+              font-weight: 500;
+            }
+
+            .intensity-bar-container {
+              flex: 1;
+              height: 8px;
+              background-color: $border-color;
+              border-radius: 4px;
+              position: relative;
+              overflow: hidden;
+
+              .intensity-bar {
+                height: 100%;
+                border-radius: 4px;
+
+                // Aspect-specific colors
+                &.conjunction {
+                  background-color: #5e35b1; // Violet for conjunctions
+                }
+
+                &.trine {
+                  background-color: #2e7d32; // Green for trines
+                }
+
+                &.square {
+                  background-color: #c62828; // Red for squares
+                }
+
+                &.opposition {
+                  background-color: #ad1457; // Pink for oppositions
+                }
+
+                &.sextile {
+                  background-color: #0277bd; // Blue for sextiles
+                }
+              }
+
+              .intensity-value {
+                position: absolute;
+                right: 0;
+                top: -12px;
+                font-size: $font-size-sm;
+                font-weight: 600;
+              }
             }
           }
 
           .transit-description {
+            margin-top: $spacing-sm;
+
             .description-text {
+              margin: 0;
               font-size: $font-size-sm;
               line-height: 1.5;
               color: $text-primary;
-              margin: 0;
             }
           }
         }
 
         .transit-actions {
-          padding: $spacing-md;
+          padding: $spacing-sm;
           display: flex;
           gap: $spacing-sm;
+          border-top: 1px solid $border-color;
+          background-color: rgba($surface, 0.5);
 
           button {
             flex: 1;
@@ -666,7 +1022,15 @@
             cursor: pointer;
             font-size: $font-size-sm;
             font-weight: 500;
-            transition: background-color $transition;
+            transition: all $transition-fast;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: $spacing-xs;
+
+            .action-icon {
+              font-size: 14px;
+            }
           }
 
           .add-journal-button {
@@ -675,6 +1039,47 @@
 
             &:hover {
               background-color: darken($accent, 10%);
+            }
+
+            // Aspect-specific styling
+            &.conjunction {
+              background-color: #5e35b1; // Violet for conjunctions
+
+              &:hover {
+                background-color: darken(#5e35b1, 10%);
+              }
+            }
+
+            &.trine {
+              background-color: #2e7d32; // Green for trines
+
+              &:hover {
+                background-color: darken(#2e7d32, 10%);
+              }
+            }
+
+            &.square {
+              background-color: #c62828; // Red for squares
+
+              &:hover {
+                background-color: darken(#c62828, 10%);
+              }
+            }
+
+            &.opposition {
+              background-color: #ad1457; // Pink for oppositions
+
+              &:hover {
+                background-color: darken(#ad1457, 10%);
+              }
+            }
+
+            &.sextile {
+              background-color: #0277bd; // Blue for sextiles
+
+              &:hover {
+                background-color: darken(#0277bd, 10%);
+              }
             }
           }
 
@@ -690,12 +1095,342 @@
       }
     }
   }
+
+  // Transit Detail Modal
+  .transit-detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: $spacing-md;
+
+    .modal-content {
+      background-color: $background;
+      border-radius: $border-radius-lg;
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: $shadow-lg;
+
+      .modal-header {
+        color: white;
+        padding: $spacing-md $spacing-lg;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h3 {
+          margin: 0;
+          font-size: $font-size-xl;
+          font-weight: 600;
+        }
+
+        .close-button {
+          background: none;
+          border: none;
+          color: white;
+          font-size: 24px;
+          cursor: pointer;
+          opacity: 0.8;
+          transition: opacity $transition-fast;
+
+          &:hover {
+            opacity: 1;
+          }
+        }
+
+        // Aspect-specific styling
+        &.aspect-conjunction {
+          background: linear-gradient(
+            135deg,
+            #5e35b1,
+            #7e57c2
+          ); // Violet gradient for conjunctions
+        }
+
+        &.aspect-trine {
+          background: linear-gradient(
+            135deg,
+            #2e7d32,
+            #4caf50
+          ); // Green gradient for trines
+        }
+
+        &.aspect-square {
+          background: linear-gradient(
+            135deg,
+            #c62828,
+            #e53935
+          ); // Red gradient for squares
+        }
+
+        &.aspect-opposition {
+          background: linear-gradient(
+            135deg,
+            #ad1457,
+            #d81b60
+          ); // Pink gradient for oppositions
+        }
+
+        &.aspect-sextile {
+          background: linear-gradient(
+            135deg,
+            #0277bd,
+            #039be5
+          ); // Blue gradient for sextiles
+        }
+      }
+
+      .modal-body {
+        padding: $spacing-lg;
+        overflow-y: auto;
+
+        .transit-dates-detail {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: $spacing-lg;
+          background-color: $surface;
+          padding: $spacing-md;
+          border-radius: $border-radius;
+
+          .date-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+
+            &.exact {
+              font-weight: 600;
+              color: $primary;
+            }
+
+            .date-label {
+              font-size: $font-size-sm;
+              color: $text-secondary;
+              margin-bottom: $spacing-xs;
+            }
+
+            .date-value {
+              font-size: $font-size-base;
+              font-weight: 500;
+            }
+          }
+        }
+
+        .transit-status-detail {
+          margin-bottom: $spacing-lg;
+
+          .status-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: $spacing-sm;
+
+            .status-label {
+              width: 120px;
+              font-weight: 600;
+              color: $text-secondary;
+            }
+
+            .status-value {
+              flex: 1;
+              font-weight: 500;
+              padding: $spacing-xs $spacing-sm;
+              border-radius: $border-radius-sm;
+              background-color: rgba($primary, 0.1);
+              display: inline-block;
+
+              &.active {
+                background-color: rgba($accent, 0.2);
+                color: $accent;
+              }
+
+              &.applying {
+                background-color: rgba($primary, 0.2);
+                color: $primary;
+              }
+
+              &.separating {
+                background-color: rgba($secondary, 0.2);
+                color: $secondary;
+              }
+
+              &.upcoming {
+                background-color: rgba($color-silver, 0.2);
+                color: $text-secondary;
+              }
+            }
+
+            .intensity-bar-container {
+              flex: 1;
+              height: 12px;
+              background-color: $border-color;
+              border-radius: 6px;
+              position: relative;
+              overflow: hidden;
+              display: flex;
+              align-items: center;
+
+              .intensity-bar {
+                height: 100%;
+                border-radius: 6px;
+
+                // Aspect-specific colors for intensity bars
+                &.aspect-conjunction {
+                  background-color: #5e35b1; // Violet for conjunctions
+                }
+
+                &.aspect-trine {
+                  background-color: #2e7d32; // Green for trines
+                }
+
+                &.aspect-square {
+                  background-color: #c62828; // Red for squares
+                }
+
+                &.aspect-opposition {
+                  background-color: #ad1457; // Pink for oppositions
+                }
+
+                &.aspect-sextile {
+                  background-color: #0277bd; // Blue for sextiles
+                }
+              }
+
+              .intensity-value {
+                position: absolute;
+                right: $spacing-xs;
+                font-size: $font-size-sm;
+                font-weight: 600;
+                color: white;
+              }
+            }
+          }
+        }
+
+        .transit-description-detail,
+        .transit-interpretation {
+          margin-bottom: $spacing-lg;
+
+          h4 {
+            color: $primary;
+            font-size: $font-size-lg;
+            margin-top: 0;
+            margin-bottom: $spacing-sm;
+            border-bottom: 1px solid $border-color;
+            padding-bottom: $spacing-xs;
+          }
+
+          p {
+            line-height: 1.6;
+            margin: 0;
+          }
+        }
+
+        .journal-section {
+          background-color: $surface;
+          border-radius: $border-radius;
+          padding: $spacing-md;
+
+          .journal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: $spacing-md;
+
+            h4 {
+              margin: 0;
+              color: $primary;
+            }
+
+            .add-journal-button {
+              background-color: $accent;
+              color: white;
+              border: none;
+              border-radius: $border-radius-sm;
+              padding: $spacing-xs $spacing-sm;
+              font-weight: 600;
+              cursor: pointer;
+              transition: background-color $transition-fast;
+              display: flex;
+              align-items: center;
+              gap: $spacing-xs;
+
+              &:hover {
+                background-color: darken($accent, 10%);
+              }
+
+              // Aspect-specific styling
+              &.aspect-conjunction {
+                background-color: #5e35b1;
+
+                &:hover {
+                  background-color: darken(#5e35b1, 10%);
+                }
+              }
+
+              &.aspect-trine {
+                background-color: #2e7d32;
+
+                &:hover {
+                  background-color: darken(#2e7d32, 10%);
+                }
+              }
+
+              &.aspect-square {
+                background-color: #c62828;
+
+                &:hover {
+                  background-color: darken(#c62828, 10%);
+                }
+              }
+
+              &.aspect-opposition {
+                background-color: #ad1457;
+
+                &:hover {
+                  background-color: darken(#ad1457, 10%);
+                }
+              }
+
+              &.aspect-sextile {
+                background-color: #0277bd;
+
+                &:hover {
+                  background-color: darken(#0277bd, 10%);
+                }
+              }
+            }
+          }
+
+          .journal-placeholder {
+            text-align: center;
+            padding: $spacing-xl;
+            color: $text-secondary;
+            font-style: italic;
+          }
+        }
+      }
+    }
+  }
 }
 
-// Media queries for responsive design
+// Media queries for responsiveness
 @media (max-width: $breakpoint-lg) {
   .week-calendar .aspect-transits .transit-grid {
     grid-template-columns: 1fr;
+  }
+
+  .transit-detail-modal .modal-content {
+    width: 95%;
   }
 }
 
@@ -743,6 +1478,48 @@
           button {
             width: 100%;
           }
+        }
+      }
+    }
+  }
+
+  .week-calendar .aspect-transits {
+    padding: $spacing-md;
+
+    .aspect-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      h3 {
+        margin-bottom: $spacing-sm;
+      }
+
+      .aspect-filters {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: $spacing-xs;
+
+        .filter-button {
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  .transit-detail-modal .modal-content .modal-body {
+    padding: $spacing-md;
+
+    .transit-dates-detail {
+      flex-direction: column;
+      gap: $spacing-sm;
+
+      .date-item {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+
+        .date-label {
+          margin-bottom: 0;
         }
       }
     }
@@ -796,9 +1573,27 @@
 
   .week-calendar .aspect-transits {
     padding: $spacing-md $spacing-sm;
+    border-radius: 0;
+    margin: 0 -$spacing-sm;
 
     h3 {
       font-size: $font-size-lg;
+    }
+
+    .transit-grid {
+      gap: $spacing-sm;
+    }
+  }
+
+  .transit-detail-modal {
+    padding: 0;
+
+    .modal-content {
+      height: 100%;
+      max-height: 100%;
+      max-width: 100%;
+      width: 100%;
+      border-radius: 0;
     }
   }
 }
