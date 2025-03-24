@@ -117,21 +117,6 @@
         }
       }
 
-      &.has-transits {
-        position: relative;
-
-        &::after {
-          content: "";
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background-color: $accent;
-        }
-      }
-
       .day-header {
         display: flex;
         justify-content: space-between;
@@ -939,62 +924,6 @@
             }
           }
 
-          .intensity-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: $spacing-sm;
-
-            .intensity-label {
-              width: 80px;
-              font-size: $font-size-sm;
-              color: $text-secondary;
-              font-weight: 500;
-            }
-
-            .intensity-bar-container {
-              flex: 1;
-              height: 8px;
-              background-color: $border-color;
-              border-radius: 4px;
-              position: relative;
-              overflow: hidden;
-
-              .intensity-bar {
-                height: 100%;
-                border-radius: 4px;
-
-                // Aspect-specific colors
-                &.conjunction {
-                  background-color: #5e35b1; // Violet for conjunctions
-                }
-
-                &.trine {
-                  background-color: #2e7d32; // Green for trines
-                }
-
-                &.square {
-                  background-color: #c62828; // Red for squares
-                }
-
-                &.opposition {
-                  background-color: #ad1457; // Pink for oppositions
-                }
-
-                &.sextile {
-                  background-color: #0277bd; // Blue for sextiles
-                }
-              }
-
-              .intensity-value {
-                position: absolute;
-                right: 0;
-                top: -12px;
-                font-size: $font-size-sm;
-                font-weight: 600;
-              }
-            }
-          }
-
           .transit-description {
             margin-top: $spacing-sm;
 
@@ -1228,12 +1157,7 @@
 
         .transit-status-detail {
           margin-bottom: $spacing-lg;
-
           .status-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: $spacing-sm;
-
             .status-label {
               width: 120px;
               font-weight: 600;
@@ -1266,51 +1190,6 @@
               &.upcoming {
                 background-color: rgba($color-silver, 0.2);
                 color: $text-secondary;
-              }
-            }
-
-            .intensity-bar-container {
-              flex: 1;
-              height: 12px;
-              background-color: $border-color;
-              border-radius: 6px;
-              position: relative;
-              overflow: hidden;
-              display: flex;
-              align-items: center;
-
-              .intensity-bar {
-                height: 100%;
-                border-radius: 6px;
-
-                // Aspect-specific colors for intensity bars
-                &.aspect-conjunction {
-                  background-color: #5e35b1; // Violet for conjunctions
-                }
-
-                &.aspect-trine {
-                  background-color: #2e7d32; // Green for trines
-                }
-
-                &.aspect-square {
-                  background-color: #c62828; // Red for squares
-                }
-
-                &.aspect-opposition {
-                  background-color: #ad1457; // Pink for oppositions
-                }
-
-                &.aspect-sextile {
-                  background-color: #0277bd; // Blue for sextiles
-                }
-              }
-
-              .intensity-value {
-                position: absolute;
-                right: $spacing-xs;
-                font-size: $font-size-sm;
-                font-weight: 600;
-                color: white;
               }
             }
           }
