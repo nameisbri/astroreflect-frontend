@@ -1,4 +1,4 @@
-# AstroReflect Frontend
+# AstroReflect ✨📓
 
 AstroReflect is a personal astrology transit journal application that allows users to track astrological transits and record their reflections. This repository contains the frontend React application.
 
@@ -13,11 +13,11 @@ The AstroReflect frontend provides an intuitive interface for:
 
 ## Tech Stack
 
-- **React**: UI component framework
-- **TypeScript**: Type safety and developer experience
-- **Vite**: Fast development environment
-- **SCSS**: Styling with variables and mixins
-- **React Router**: Client-side routing
+- **React**
+- **TypeScript**
+- **Vite**
+- **SCSS**
+- **React Router**
 
 The application connects to a backend that uses the **Swiss Ephemeris** library for accurate astrological calculations, providing precise planetary positions and transits.
 
@@ -100,4 +100,4 @@ src/
 
 ## Backend API
 
-This frontend connects to the [AstroReflect API](https://github.com/yourusername/astroreflect-api) for transit data and journal functionality. Make sure the API is running locally or provide the correct endpoint in your `.env` file.
+This frontend connects to the [AstroReflect API](https://github.com/nameisbri/astroreflect-api) for transit data and journal functionality. Make sure the API is running locally or provide the correct endpoint in your `.env` file.
