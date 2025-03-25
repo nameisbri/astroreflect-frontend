@@ -141,26 +141,34 @@ const TransitCard = ({ transit, onClose, onAddJournal }: TransitCardProps) => {
         )}
 
         <div className="journal-entries">
-          {journalEntries.map((entry) => (
-            <div className="journal-entry" key={entry.id}>
-              <div className="entry-header">
-                <span className="entry-date">
-                  {formatShortDate(entry.createdAt)}
-                </span>
-                {entry.mood && <span className="entry-mood">{entry.mood}</span>}
-              </div>
-              <p className="entry-content">{entry.content}</p>
-              {entry.tags && entry.tags.length > 0 && (
-                <div className="entry-tags">
-                  {entry.tags.map((tag) => (
-                    <span key={tag} className="tag">
-                      {tag}
-                    </span>
-                  ))}
+          {journalEntries.length === 0 ? (
+            <p className="no-entries">
+              No journal entries yet. Add your reflections about this transit.
+            </p>
+          ) : (
+            journalEntries.map((entry) => (
+              <div className="journal-entry" key={entry.id}>
+                <div className="entry-header">
+                  <span className="entry-date">
+                    {formatShortDate(entry.createdAt)}
+                  </span>
+                  {entry.mood && (
+                    <span className="entry-mood">{entry.mood}</span>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+                <p className="entry-content">{entry.content}</p>
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="entry-tags">
+                    {entry.tags.map((tag) => (
+                      <span key={tag} className="tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

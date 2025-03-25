@@ -23,6 +23,10 @@ import {
   JournalEntry,
 } from "../../types/astrology";
 import { formatShortDate } from "../../utils/dateUtils";
+// Add these imports at the top of src/components/Calendar/Calendar.tsx
+import JournalEntryForm from "../JournalEntry/JournalEntryForm";
+import TransitCard from "../TransitCard/TransitCard";
+import { v4 as uuidv4 } from "uuid";
 
 const Calendar = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -38,6 +42,12 @@ const Calendar = () => {
   const [journalEntriesByDay, setJournalEntriesByDay] = useState<
     Record<string, JournalEntry[]>
   >({});
+  const [showJournalForm, setShowJournalForm] = useState(false);
+  const [selectedJournalTransit, setSelectedJournalTransit] = useState<{
+    transitId: string;
+    transitTypeId: string;
+  } | null>(null);
+  const [showTransitDetail, setShowTransitDetail] = useState(false);
 
   // Load transits for the current week and today's details on initial load
   useEffect(() => {
@@ -75,6 +85,44 @@ const Calendar = () => {
   const getJournalEntriesForDay = (day: Date): JournalEntry[] => {
     const dayKey = format(day, "yyyy-MM-dd");
     return journalEntriesByDay[dayKey] || [];
+  };
+
+  // Add these functions inside the Calendar component
+  const handleAddJournal = (transitId: string, transitTypeId: string) => {
+    setSelectedJournalTransit({ transitId, transitTypeId });
+    setShowJournalForm(true);
+    // Close the transit detail if it's open
+    setSelectedTransit(null);
+    setShowTransitDetail(false);
+  };
+
+  const handleSaveJournal = async () => {
+    setShowJournalForm(false);
+    setSelectedJournalTransit(null);
+
+    // Reload journal entries for the selected day to show the new entry
+    if (selectedDay) {
+      try {
+        const entries = await fetchJournalEntriesByDate(selectedDay);
+        const dayKey = format(selectedDay, "yyyy-MM-dd");
+        setJournalEntriesByDay((prev) => ({
+          ...prev,
+          [dayKey]: entries,
+        }));
+      } catch (error) {
+        console.error("Failed to refresh journal entries:", error);
+      }
+    }
+  };
+
+  const handleViewTransitDetail = (transit: Transit) => {
+    setSelectedTransit(transit);
+    setShowTransitDetail(true);
+  };
+
+  const handleCloseTransitDetail = () => {
+    setSelectedTransit(null);
+    setShowTransitDetail(false);
   };
 
   // Function to navigate to today
@@ -391,8 +439,37 @@ const Calendar = () => {
                 </div>
 
                 <div className="planet-actions">
-                  <button className="add-journal-button">Add Entry</button>
-                  <button className="view-entries-button">View Entries</button>
+                  <button
+                    className="add-journal-button"
+                    onClick={() => {
+                      // Create a placeholder transit for planet position entries
+                      const placeholderId = uuidv4(); // You'll need to import this
+                      const transitTypeId = `${position.planet}_IN_${
+                        position.sign?.name || "Aries"
+                      }`;
+                      handleAddJournal(placeholderId, transitTypeId);
+                    }}
+                  >
+                    Add Entry
+                  </button>
+                  <button
+                    className="view-entries-button"
+                    onClick={() => {
+                      // Implement logic to view entries for this planet
+                      // Maybe fetch by transit type ID for the planet in this sign
+                      const transitTypeId = `${position.planet}_IN_${
+                        position.sign?.name || "Aries"
+                      }`;
+                      // For now, just alert
+                      alert(
+                        `View entries for ${position.planet} in ${
+                          position.sign?.name || "Unknown"
+                        }`
+                      );
+                    }}
+                  >
+                    View Entries
+                  </button>
                 </div>
               </div>
             );
@@ -647,11 +724,23 @@ const Calendar = () => {
                   </div>
 
                   <div className="transit-actions">
-                    <button className={`add-journal-button ${aspectClass}`}>
+                    <button
+                      className={`add-journal-button ${aspectClass}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddJournal(transit.id, transit.transitTypeId);
+                      }}
+                    >
                       <span className="action-icon">✎</span>
                       Add Journal Entry
                     </button>
-                    <button className="view-entries-button">
+                    <button
+                      className="view-entries-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewTransitDetail(transit);
+                      }}
+                    >
                       <span className="action-icon">▤</span>
                       View Entries
                     </button>
@@ -735,6 +824,12 @@ const Calendar = () => {
                     <h4>Journal Entries</h4>
                     <button
                       className={`add-journal-button aspect-${selectedTransit.aspect?.toLowerCase()}`}
+                      onClick={() =>
+                        handleAddJournal(
+                          selectedTransit.id,
+                          selectedTransit.transitTypeId
+                        )
+                      }
                     >
                       Add Entry
                     </button>
@@ -872,6 +967,35 @@ const Calendar = () => {
           </div>
           {renderPlanetPositions()}
           {renderAspectTransits()}
+        </div>
+      )}
+
+      {/* Journal Entry Form Modal */}
+      {showJournalForm && selectedJournalTransit && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <JournalEntryForm
+              transitId={selectedJournalTransit.transitId}
+              transitTypeId={selectedJournalTransit.transitTypeId}
+              onSave={handleSaveJournal}
+              onCancel={() => setShowJournalForm(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Transit Detail Modal */}
+      {showTransitDetail && selectedTransit && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <TransitCard
+              transit={selectedTransit}
+              onClose={handleCloseTransitDetail}
+              onAddJournal={(transitId, transitTypeId) => {
+                handleAddJournal(transitId, transitTypeId);
+              }}
+            />
+          </div>
         </div>
       )}
     </div>
