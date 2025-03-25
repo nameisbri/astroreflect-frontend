@@ -35,13 +35,7 @@ const Calendar = () => {
         const start = startOfWeek(currentWeek, { weekStartsOn: 1 }); // Start on Monday
         const end = endOfWeek(currentWeek, { weekStartsOn: 1 }); // End on Sunday
 
-        console.log(
-          `Fetching transits from ${start.toISOString()} to ${end.toISOString()}`
-        );
-
         const transitData = await fetchTransits(start, end);
-        console.log("API returned transits:", transitData);
-
         setTransits(transitData);
       } catch (err) {
         console.error("Failed to fetch transits:", err);
@@ -70,12 +64,10 @@ const Calendar = () => {
   // Navigation functions
   const handlePreviousWeek = () => {
     setCurrentWeek((prevWeek) => addWeeks(prevWeek, -1));
-    setSelectedDay(null);
   };
 
   const handleNextWeek = () => {
     setCurrentWeek((prevWeek) => addWeeks(prevWeek, 1));
-    setSelectedDay(null);
   };
 
   // Get days in the current week
@@ -115,7 +107,6 @@ const Calendar = () => {
         setPlanetPositions(snapshot.positions);
       } else {
         setPlanetPositions([]);
-        console.warn("No planet positions returned from API");
       }
 
       if (snapshot && Array.isArray(snapshot.transits)) {
@@ -125,8 +116,6 @@ const Calendar = () => {
         const dayTransits = getTransitsForDay(day);
         setSelectedDayTransits(dayTransits);
       }
-
-      console.log(`Loaded data for: ${format(day, "yyyy-MM-dd")}`);
     } catch (err) {
       console.error("Failed to fetch daily snapshot:", err);
       // Fallback to the previous method if the snapshot endpoint fails
@@ -141,6 +130,19 @@ const Calendar = () => {
   // Handle day click
   const handleDayClick = (day: Date) => {
     loadDailyData(day);
+  };
+
+  // Simplified transit indicator - just show a colored dot if transits exist
+  const renderTransitIndicator = (day: Date) => {
+    const dayTransits = getTransitsForDay(day);
+    if (dayTransits.length === 0) return null;
+
+    return (
+      <div className="transit-indicator">
+        <span className="transit-dot"></span>
+        <span className="transit-count">{dayTransits.length}</span>
+      </div>
+    );
   };
 
   // Get an icon/symbol for the planet
@@ -207,7 +209,6 @@ const Calendar = () => {
     };
 
     // Add half the retrograde duration to today to estimate when it goes direct
-    // Assuming we're roughly in the middle of the retrograde period
     const duration = retrogradeDurations[planet] || 0;
     const result = new Date(today);
     result.setDate(result.getDate() + Math.floor(duration / 2));
@@ -231,48 +232,6 @@ const Calendar = () => {
       "Pisces": "♓",
     };
     return signSymbols[sign] || sign.charAt(0);
-  };
-
-  // Render the transit indicators for a day
-  const renderTransitIndicators = (day: Date) => {
-    const dayTransits = getTransitsForDay(day);
-
-    if (dayTransits.length === 0) return null;
-
-    // Sort transits by importance and take the top 3
-    const sortedTransits = [...dayTransits].sort((a, b) => {
-      // First compare by planetA importance
-      const planetAImportance =
-        getPlanetImportance(a.planetA) - getPlanetImportance(b.planetA);
-      if (planetAImportance !== 0) return planetAImportance;
-
-      // Then by planetB importance
-      return (
-        getPlanetImportance(a.planetB || Planet.SUN) -
-        getPlanetImportance(b.planetB || Planet.SUN)
-      );
-    });
-
-    const topTransits = sortedTransits.slice(0, 3);
-
-    return (
-      <div className="transit-indicators">
-        {topTransits.map((transit, index) => (
-          <div
-            key={index}
-            className={`transit-symbol ${transit.planetA.toLowerCase()}`}
-            title={`${transit.planetA} ${transit.aspect} ${transit.planetB}`}
-          >
-            {getPlanetSymbol(transit.planetA)}
-            {transit.aspect && getAspectSymbol(transit.aspect)}
-            {transit.planetB && getPlanetSymbol(transit.planetB)}
-          </div>
-        ))}
-        {dayTransits.length > 3 && (
-          <div className="transit-more">+{dayTransits.length - 3}</div>
-        )}
-      </div>
-    );
   };
 
   // Helper for sorting planets by traditional astrological importance
@@ -591,15 +550,13 @@ const Calendar = () => {
                     </div>
                     <div className="timeline-marks">
                       <div className="start-date">
-                        {format(transit.startDate, "MMM d")}
+                        {format(startDate, "MMM d")}
                       </div>
                       <div className="exact-date">
                         <span className="exact-marker">●</span>
                         <span className="exact-label">Exact</span>
                       </div>
-                      <div className="end-date">
-                        {format(transit.endDate, "MMM d")}
-                      </div>
+                      <div className="end-date">{format(endDate, "MMM d")}</div>
                     </div>
                   </div>
 
@@ -607,7 +564,7 @@ const Calendar = () => {
                     <div className="exact-date-row">
                       <span className="date-label">Exact:</span>
                       <span className="date-value">
-                        {format(transit.exactDate, "MMM d")}
+                        {format(exactDate, "MMM d")}
                       </span>
                     </div>
 
@@ -729,59 +686,93 @@ const Calendar = () => {
   };
 
   return (
-    <div className="week-calendar">
+    <div className="week-calendar simplified">
+      {/* Simplified Calendar Header */}
       <div className="calendar-header">
-        <div className="calendar-nav-left">
-          <button className="calendar-nav-button" onClick={handlePreviousWeek}>
-            &lt; Previous Week
-          </button>
+        <div className="calendar-title">
+          <h2>
+            {format(startOfWeek(currentWeek, { weekStartsOn: 1 }), "MMMM yyyy")}
+          </h2>
+          <div className="date-range">
+            {format(startOfWeek(currentWeek, { weekStartsOn: 1 }), "MMM d")} -{" "}
+            {format(endOfWeek(currentWeek, { weekStartsOn: 1 }), "MMM d")}
+          </div>
         </div>
-        <h2>
-          {format(startOfWeek(currentWeek, { weekStartsOn: 1 }), "MMM d")} -{" "}
-          {format(endOfWeek(currentWeek, { weekStartsOn: 1 }), "MMM d, yyyy")}
-        </h2>
-        <div className="calendar-nav-right">
+
+        <div className="calendar-controls">
+          <button
+            className="calendar-nav-button prev-button"
+            onClick={handlePreviousWeek}
+            aria-label="Previous Week"
+          >
+            ←
+          </button>
+
           <button
             className="calendar-nav-button today-button"
             onClick={handleTodayClick}
           >
             Today
           </button>
-          <button className="calendar-nav-button" onClick={handleNextWeek}>
-            Next Week &gt;
+
+          <button
+            className="calendar-nav-button next-button"
+            onClick={handleNextWeek}
+            aria-label="Next Week"
+          >
+            →
           </button>
         </div>
       </div>
 
-      {isLoading && <div className="loading">Loading transits...</div>}
-      {error && <div className="error">{error}</div>}
-
-      <div className="week-grid">
-        {getDaysInWeek().map((day) => {
-          const dayNumber = day.getDate();
-          const isCurrentDay = isToday(day);
-          const isSelected = selectedDay ? isSameDay(day, selectedDay) : false;
-
-          return (
-            <div
-              key={day.toString()}
-              className={`week-day ${isCurrentDay ? "current-day" : ""} ${
-                isSelected ? "selected-day" : ""
-              } `}
-              onClick={() => handleDayClick(day)}
-            >
-              <div className="day-header">
-                <span className="day-name">{format(day, "EEE")}</span>
-                <span className="day-number">{dayNumber}</span>
+      {isLoading ? (
+        <div className="loading">Loading weekly transits...</div>
+      ) : error ? (
+        <div className="error">{error}</div>
+      ) : (
+        <div className="week-grid">
+          {/* Day headers */}
+          <div className="day-headers">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+              <div key={day} className="day-name">
+                {day}
               </div>
-              {renderTransitIndicators(day)}
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
 
+          {/* Calendar days */}
+          <div className="days-grid">
+            {getDaysInWeek().map((day) => {
+              const dayNumber = day.getDate();
+              const isCurrentDay = isToday(day);
+              const isSelected = selectedDay
+                ? isSameDay(day, selectedDay)
+                : false;
+              const hasTransits = getTransitsForDay(day).length > 0;
+
+              return (
+                <div
+                  key={day.toString()}
+                  className={`day-cell ${isCurrentDay ? "current-day" : ""} ${
+                    isSelected ? "selected-day" : ""
+                  } ${hasTransits ? "has-transits" : ""}`}
+                  onClick={() => handleDayClick(day)}
+                >
+                  <span className="day-number">{dayNumber}</span>
+                  {renderTransitIndicator(day)}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Selected day info - unchanged */}
       {selectedDay && (
         <div className="selected-day-details">
+          <div className="selected-date-header">
+            <h3>{format(selectedDay, "EEEE, MMMM d, yyyy")}</h3>
+          </div>
           {renderPlanetPositions()}
           {renderAspectTransits()}
         </div>

@@ -1,7 +1,7 @@
 @use "../../styles/scss/variables" as *;
 @use "../../styles/scss/mixins" as *;
 
-.week-calendar {
+.week-calendar.simplified {
   padding: $spacing-md;
   background-color: $background;
   border-radius: $border-radius;
@@ -15,49 +15,62 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: $spacing-lg;
+    padding-bottom: $spacing-md;
+    border-bottom: 1px solid $border-color;
 
-    h2 {
-      color: $primary;
-      font-weight: 600;
-      margin: 0;
-      text-align: center;
-      flex: 1;
-    }
-
-    .calendar-nav-left,
-    .calendar-nav-right {
-      display: flex;
-      align-items: center;
-      min-width: 150px;
-    }
-
-    .calendar-nav-right {
-      justify-content: flex-end;
-      gap: $spacing-sm;
-    }
-
-    .calendar-nav-button {
-      background-color: $surface;
-      border: 1px solid $border-color;
-      border-radius: $border-radius-sm;
-      padding: $spacing-xs $spacing-md;
-      cursor: pointer;
-      transition: all $transition;
-
-      &:hover {
-        background-color: $primary;
-        color: white;
+    .calendar-title {
+      h2 {
+        color: $primary;
+        font-weight: 600;
+        margin: 0 0 $spacing-xs 0;
+        font-size: $font-size-xl;
       }
 
-      &.today-button {
-        background-color: rgba($accent, 0.1);
-        border-color: $accent;
-        color: $accent;
-        font-weight: 600;
+      .date-range {
+        color: $text-secondary;
+        font-size: $font-size-base;
+      }
+    }
+
+    .calendar-controls {
+      display: flex;
+      gap: $spacing-sm;
+
+      .calendar-nav-button {
+        background-color: $surface;
+        border: 1px solid $border-color;
+        border-radius: $border-radius-sm;
+        padding: $spacing-xs $spacing-md;
+        cursor: pointer;
+        transition: all $transition-fast;
+        font-size: $font-size-base;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
 
         &:hover {
-          background-color: $accent;
+          background-color: rgba($primary, 0.05);
+          border-color: $primary;
+        }
+
+        &.today-button {
+          background-color: $primary;
           color: white;
+          padding: $spacing-xs $spacing-md;
+          font-weight: 500;
+          min-width: 80px;
+
+          &:hover {
+            background-color: darken($primary, 5%);
+          }
+        }
+
+        &.prev-button,
+        &.next-button {
+          font-size: $font-size-lg;
+          font-weight: 600;
         }
       }
     }
@@ -66,33 +79,56 @@
   .loading,
   .error {
     text-align: center;
-    padding: $spacing-md;
+    padding: $spacing-xl $spacing-md;
     margin: $spacing-md 0;
+    color: $text-secondary;
+
+    &.error {
+      color: #e74c3c;
+    }
   }
 
-  .error {
-    color: #e74c3c;
+  // Day headers row
+  .day-headers {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
+
+    .day-name {
+      text-align: center;
+      font-weight: 600;
+      color: $text-secondary;
+      padding: $spacing-sm 0;
+      font-size: $font-size-base;
+    }
   }
 
-  .week-grid {
+  // Days grid
+  .days-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: $spacing-sm;
     margin-bottom: $spacing-xl;
 
-    .week-day {
+    .day-cell {
       background-color: $surface;
       border: 1px solid $border-color;
-      border-radius: $border-radius;
-      padding: $spacing-md;
-      min-height: 120px;
+      border-radius: $border-radius-sm;
+      aspect-ratio: 1/1;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      transition: all $transition;
+      transition: all $transition-fast;
+      position: relative;
+      padding: $spacing-sm;
 
       &:hover {
         border-color: $primary;
+        background-color: rgba($primary, 0.02);
+        transform: translateY(-2px);
         box-shadow: $shadow-sm;
       }
 
@@ -100,7 +136,7 @@
         border-color: $primary;
         background-color: rgba($primary, 0.05);
 
-        .day-header {
+        .day-number {
           color: $primary;
           font-weight: 600;
         }
@@ -111,98 +147,147 @@
         background-color: rgba($accent, 0.05);
         box-shadow: $shadow;
 
-        .day-header {
+        .day-number {
           color: $accent;
           font-weight: 600;
         }
       }
 
-      .day-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: $spacing-sm;
-        font-weight: 500;
-
-        .day-name {
-          font-size: $font-size-sm;
-        }
-
+      &.has-transits {
         .day-number {
-          font-size: $font-size-lg;
+          margin-bottom: $spacing-sm;
         }
       }
 
-      .transit-indicators {
-        margin-top: auto;
+      .day-number {
+        font-size: $font-size-xl;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      .transit-indicator {
         display: flex;
-        flex-wrap: wrap;
-        gap: $spacing-xs;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
 
-        .transit-symbol {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 3px 6px;
-          border-radius: $border-radius-sm;
-          font-size: $font-size-sm;
-          font-weight: 600;
-          color: white;
-          background-color: $secondary;
-
-          &.sun {
-            background-color: $accent;
-          }
-
-          &.moon {
-            background-color: $primary;
-          }
-
-          &.mercury {
-            background-color: $secondary;
-          }
-
-          &.venus {
-            background-color: $color-coral;
-          }
-
-          &.mars {
-            background-color: $color-coral;
-          }
-
-          &.jupiter {
-            background-color: $color-palatinate;
-          }
-
-          &.saturn {
-            background-color: $color-hookers-green;
-          }
-
-          &.uranus {
-            background-color: $color-hookers-green;
-          }
-
-          &.neptune {
-            background-color: $primary;
-          }
-
-          &.pluto {
-            background-color: $color-palatinate;
-          }
+        .transit-dot {
+          width: 8px;
+          height: 8px;
+          background-color: $accent;
+          border-radius: 50%;
         }
 
-        .transit-more {
+        .transit-count {
           font-size: $font-size-sm;
           color: $text-secondary;
-          display: flex;
-          align-items: center;
-          font-weight: 500;
+          font-weight: 600;
         }
       }
     }
   }
 
-  .selected-day-details {
-    margin-top: $spacing-lg;
+  // Selected day header
+  .selected-date-header {
+    margin: $spacing-xl 0 $spacing-lg;
+    text-align: center;
+
+    h3 {
+      color: $primary;
+      font-size: $font-size-xl;
+      font-weight: 600;
+      margin: 0;
+      position: relative;
+      display: inline-block;
+
+      &:after {
+        content: "";
+        display: block;
+        width: 60%;
+        height: 3px;
+        background-color: $primary;
+        position: absolute;
+        bottom: -8px;
+        left: 20%;
+        border-radius: 2px;
+      }
+    }
+  }
+
+  // Media queries for responsiveness
+  @media (max-width: $breakpoint-md) {
+    .calendar-header {
+      flex-direction: column;
+      gap: $spacing-md;
+
+      .calendar-title {
+        text-align: center;
+      }
+
+      .calendar-controls {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .day-headers {
+      .day-name {
+        font-size: $font-size-sm;
+      }
+    }
+  }
+
+  @media (max-width: $breakpoint-sm) {
+    padding: $spacing-sm;
+
+    .calendar-header {
+      padding-bottom: $spacing-sm;
+      margin-bottom: $spacing-md;
+
+      .calendar-title {
+        h2 {
+          font-size: $font-size-lg;
+        }
+
+        .date-range {
+          font-size: $font-size-sm;
+        }
+      }
+
+      .calendar-controls {
+        .calendar-nav-button {
+          min-width: 36px;
+          height: 36px;
+          padding: $spacing-xs;
+
+          &.today-button {
+            min-width: 70px;
+          }
+        }
+      }
+    }
+
+    .days-grid {
+      gap: $spacing-xs;
+
+      .day-cell {
+        padding: $spacing-xs;
+
+        .day-number {
+          font-size: $font-size-lg;
+        }
+      }
+    }
+
+    .day-headers {
+      gap: $spacing-xs;
+
+      .day-name {
+        padding: $spacing-xs 0;
+        font-size: $font-size-sm;
+      }
+    }
   }
 
   // Planet positions grid
