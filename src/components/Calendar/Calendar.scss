@@ -1561,3 +1561,146 @@
     }
   }
 }
+
+// Calendar legend
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: $spacing-lg;
+  margin: $spacing-sm 0 $spacing-md;
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  padding: $spacing-sm;
+  background-color: $surface;
+  border-radius: $border-radius-sm;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+
+    .legend-text {
+      font-size: $font-size-sm;
+    }
+
+    // Same styling as in the day cells but slightly larger
+    .calendar-markers {
+      display: flex;
+      gap: 2px;
+
+      .calendar-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: $primary;
+      }
+    }
+
+    .exact-marker {
+      font-size: 10px;
+      color: $accent;
+    }
+
+    .journal-indicator {
+      display: flex;
+      align-items: center;
+
+      .journal-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: $secondary;
+      }
+
+      .entry-count {
+        font-size: 10px;
+        margin-left: 2px;
+        color: $secondary;
+      }
+    }
+  }
+}
+
+// New combined transit indicators for day cells
+.day-cell {
+  // Keep your existing day cell styles
+
+  .transit-indicators {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    margin-top: 3px;
+
+    .indicator-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+
+      .calendar-markers {
+        display: flex;
+        gap: 2px;
+
+        .calendar-dot {
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background-color: $primary;
+          opacity: 0.8;
+        }
+      }
+
+      .exact-marker {
+        font-size: 8px;
+        color: $accent;
+        line-height: 1;
+        position: relative;
+        top: -1px;
+      }
+    }
+
+    .journal-indicator {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+
+      .journal-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background-color: $secondary;
+        margin-right: -1px;
+      }
+
+      .entry-count {
+        font-size: 9px;
+        color: $secondary;
+        font-weight: 600;
+      }
+    }
+  }
+
+  &.has-transits {
+    .day-number {
+      margin-bottom: 0; // Adjust spacing for indicators
+    }
+  }
+}
+
+// Responsive styles for the legend
+@media (max-width: $breakpoint-md) {
+  .calendar-legend {
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .calendar-legend {
+    font-size: 10px;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
+    padding: $spacing-xs;
+  }
+}

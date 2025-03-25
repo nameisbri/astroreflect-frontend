@@ -10,10 +10,10 @@ import {
   TransitSubtype,
   TransitTiming,
 } from "../types/astrology";
+import { format, parseISO } from "date-fns";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// Error handling helper
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -23,7 +23,6 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
-// Custom mock data for development if API isn't available
 const MOCK_TRANSITS: Transit[] = [
   {
     id: "transit-1",
@@ -72,13 +71,11 @@ const MOCK_TRANSITS: Transit[] = [
   },
 ];
 
-// Transit-related API calls
 export const fetchTransits = async (
   startDate?: Date,
   endDate?: Date,
   planets?: Planet[]
 ): Promise<Transit[]> => {
-  // Prepare query parameters
   const params = new URLSearchParams();
 
   if (startDate) {
@@ -108,7 +105,6 @@ export const fetchTransits = async (
     console.error("Error fetching transits from API:", error);
     console.log("Using mock transit data instead");
 
-    // Filter mock data based on date range
     if (startDate && endDate) {
       const start = startDate.getTime();
       const end = endDate.getTime();
@@ -117,7 +113,6 @@ export const fetchTransits = async (
         const transitStart = new Date(transit.startDate).getTime();
         const transitEnd = new Date(transit.endDate).getTime();
 
-        // Transit overlaps with requested date range
         return transitStart <= end && transitEnd >= start;
       });
     }
@@ -146,7 +141,6 @@ export const fetchPlanetPosition = async (
   return data.position;
 };
 
-// Journal-related API calls
 export const createJournalEntry = async (
   entry: CreateJournalEntryRequest
 ): Promise<JournalEntry> => {
@@ -253,7 +247,6 @@ export const searchJournalEntries = async (
   return data.entries || [];
 };
 
-// Add this function to src/services/api.ts
 export const fetchDailySnapshot = async (
   date?: Date
 ): Promise<{
@@ -277,11 +270,67 @@ export const fetchDailySnapshot = async (
     return data;
   } catch (error) {
     console.error("Error fetching daily snapshot:", error);
-    // Return mock data structure for development
+
     return {
       date: new Date().toISOString(),
-      positions: [], // You might want to add mock positions here
+      positions: [],
       transits: MOCK_TRANSITS,
     };
   }
+};
+
+// Function to fetch journal entries for a specific date
+export const fetchJournalEntriesByDate = async (
+  date: Date
+): Promise<JournalEntry[]> => {
+  // Format date as YYYY-MM-DD
+  const formattedDate = format(date, "yyyy-MM-dd");
+
+  try {
+    const response = await fetch(
+      `${API_URL}/journal/entries/date/${formattedDate}`
+    );
+    const data = await handleResponse(response);
+    return data.entries || [];
+  } catch (error) {
+    console.error(
+      `Error fetching journal entries for date ${formattedDate}:`,
+      error
+    );
+    return []; // Return empty array on error
+  }
+};
+
+// Function to fetch journal entries for multiple dates (useful for calendar view)
+export const fetchJournalEntriesForDateRange = async (
+  startDate: Date,
+  endDate: Date
+): Promise<Record<string, JournalEntry[]>> => {
+  // Create array of all dates in the range
+  const dates: Date[] = [];
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    dates.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Create map to store entries by date
+  const entriesByDate: Record<string, JournalEntry[]> = {};
+
+  // Fetch entries for each date
+  await Promise.all(
+    dates.map(async (date) => {
+      const dateKey = format(date, "yyyy-MM-dd");
+      try {
+        const entries = await fetchJournalEntriesByDate(date);
+        entriesByDate[dateKey] = entries;
+      } catch (error) {
+        console.error(`Error fetching entries for ${dateKey}:`, error);
+        entriesByDate[dateKey] = [];
+      }
+    })
+  );
+
+  return entriesByDate;
 };

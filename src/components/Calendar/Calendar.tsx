@@ -9,9 +9,19 @@ import {
   isSameDay,
   parseISO,
 } from "date-fns";
-import { fetchTransits, fetchDailySnapshot } from "../../services/api";
+import {
+  fetchTransits,
+  fetchDailySnapshot,
+  fetchJournalEntriesByDate,
+  fetchJournalEntriesForDateRange,
+} from "../../services/api";
 import "./Calendar.scss";
-import { Transit, Planet, PlanetPosition } from "../../types/astrology";
+import {
+  Transit,
+  Planet,
+  PlanetPosition,
+  JournalEntry,
+} from "../../types/astrology";
 import { formatShortDate } from "../../utils/dateUtils";
 
 const Calendar = () => {
@@ -25,6 +35,9 @@ const Calendar = () => {
   const [selectedDayTransits, setSelectedDayTransits] = useState<Transit[]>([]);
   const [selectedTransit, setSelectedTransit] = useState<Transit | null>(null);
   const [aspectFilter, setAspectFilter] = useState<string>("all");
+  const [journalEntriesByDay, setJournalEntriesByDay] = useState<
+    Record<string, JournalEntry[]>
+  >({});
 
   // Load transits for the current week and today's details on initial load
   useEffect(() => {
@@ -37,6 +50,10 @@ const Calendar = () => {
 
         const transitData = await fetchTransits(start, end);
         setTransits(transitData);
+
+        // Fetch journal entries for the week
+        const entriesData = await fetchJournalEntriesForDateRange(start, end);
+        setJournalEntriesByDay(entriesData);
       } catch (err) {
         console.error("Failed to fetch transits:", err);
         setError("Failed to load transits. Please try again later.");
@@ -53,6 +70,12 @@ const Calendar = () => {
       loadDailyData(today);
     }
   }, [currentWeek]);
+
+  // Helper function to get journal entries for a specific day
+  const getJournalEntriesForDay = (day: Date): JournalEntry[] => {
+    const dayKey = format(day, "yyyy-MM-dd");
+    return journalEntriesByDay[dayKey] || [];
+  };
 
   // Function to navigate to today
   const handleTodayClick = () => {
@@ -116,6 +139,16 @@ const Calendar = () => {
         const dayTransits = getTransitsForDay(day);
         setSelectedDayTransits(dayTransits);
       }
+
+      // Fetch journal entries for the selected day if not already loaded
+      const dayKey = format(day, "yyyy-MM-dd");
+      if (!journalEntriesByDay[dayKey]) {
+        const entries = await fetchJournalEntriesByDate(day);
+        setJournalEntriesByDay((prev) => ({
+          ...prev,
+          [dayKey]: entries,
+        }));
+      }
     } catch (err) {
       console.error("Failed to fetch daily snapshot:", err);
       // Fallback to the previous method if the snapshot endpoint fails
@@ -132,15 +165,49 @@ const Calendar = () => {
     loadDailyData(day);
   };
 
-  // Simplified transit indicator - just show a colored dot if transits exist
+  // Combined transit and journal indicator
   const renderTransitIndicator = (day: Date) => {
     const dayTransits = getTransitsForDay(day);
     if (dayTransits.length === 0) return null;
 
+    // Get journal entries for this day
+    const journalEntries = getJournalEntriesForDay(day);
+    const hasJournalEntry = journalEntries.length > 0;
+
+    // Count exact transits on this day
+    const exactToday = dayTransits.filter((transit) => {
+      const exactDate =
+        typeof transit.exactDate === "string"
+          ? parseISO(transit.exactDate)
+          : transit.exactDate;
+      return isSameDay(exactDate, day);
+    }).length;
+
     return (
-      <div className="transit-indicator">
-        <span className="transit-dot"></span>
-        <span className="transit-count">{dayTransits.length}</span>
+      <div className="transit-indicators">
+        <div className="indicator-row">
+          {/* Calendar marker dots */}
+          <div className="calendar-markers">
+            {Array.from({ length: Math.min(dayTransits.length, 3) }).map(
+              (_, i) => (
+                <span key={i} className="calendar-dot"></span>
+              )
+            )}
+          </div>
+
+          {/* Exact transit marker */}
+          {exactToday > 0 && <span className="exact-marker">★</span>}
+        </div>
+
+        {/* Journal entry indicator */}
+        {hasJournalEntry && (
+          <div className="journal-indicator">
+            <span className="journal-dot"></span>
+            {journalEntries.length > 1 && (
+              <span className="entry-count">{journalEntries.length}</span>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -685,6 +752,32 @@ const Calendar = () => {
     );
   };
 
+  // Render calendar legend to explain the indicators
+  const renderCalendarLegend = () => (
+    <div className="calendar-legend">
+      <div className="legend-item">
+        <div className="calendar-markers">
+          <span className="calendar-dot"></span>
+          <span className="calendar-dot"></span>
+        </div>
+        <span className="legend-text">Transit count</span>
+      </div>
+
+      <div className="legend-item">
+        <span className="exact-marker">★</span>
+        <span className="legend-text">Exact transit</span>
+      </div>
+
+      <div className="legend-item">
+        <div className="journal-indicator">
+          <span className="journal-dot"></span>
+          <span className="entry-count">2</span>
+        </div>
+        <span className="legend-text">Journal entries</span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="week-calendar simplified">
       {/* Simplified Calendar Header */}
@@ -725,6 +818,9 @@ const Calendar = () => {
         </div>
       </div>
 
+      {/* Calendar legend */}
+      {renderCalendarLegend()}
+
       {isLoading ? (
         <div className="loading">Loading weekly transits...</div>
       ) : error ? (
@@ -748,7 +844,8 @@ const Calendar = () => {
               const isSelected = selectedDay
                 ? isSameDay(day, selectedDay)
                 : false;
-              const hasTransits = getTransitsForDay(day).length > 0;
+              const dayTransits = getTransitsForDay(day);
+              const hasTransits = dayTransits.length > 0;
 
               return (
                 <div
@@ -759,7 +856,7 @@ const Calendar = () => {
                   onClick={() => handleDayClick(day)}
                 >
                   <span className="day-number">{dayNumber}</span>
-                  {renderTransitIndicator(day)}
+                  {hasTransits && renderTransitIndicator(day)}
                 </div>
               );
             })}
@@ -767,7 +864,7 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Selected day info - unchanged */}
+      {/* Selected day info */}
       {selectedDay && (
         <div className="selected-day-details">
           <div className="selected-date-header">
