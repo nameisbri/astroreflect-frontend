@@ -1,54 +1,103 @@
-# React + TypeScript + Vite
+# AstroReflect Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AstroReflect is a personal astrology transit journal application that allows users to track astrological transits and record their reflections. This repository contains the frontend React application.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The AstroReflect frontend provides an intuitive interface for:
 
-## Expanding the ESLint configuration
+- Viewing astrological transits on a calendar
+- Exploring detailed transit information based on Swiss Ephemeris calculations
+- Creating and managing journal entries linked to transits
+- Viewing planetary positions, aspects, and retrograde periods
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Tech Stack
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- **React**: UI component framework
+- **TypeScript**: Type safety and developer experience
+- **Vite**: Fast development environment
+- **SCSS**: Styling with variables and mixins
+- **React Router**: Client-side routing
+
+The application connects to a backend that uses the **Swiss Ephemeris** library for accurate astrological calculations, providing precise planetary positions and transits.
+
+## Color Palette
+
+AstroReflect uses a custom color palette:
+
+- **Palatinate (#5c164e)**: Primary
+- **Coral (#ef8354)**: Accent
+- **Hooker's Green (#517664)**: Secondary
+- **Silver (#bfc0c0)**: Neutral
+- **White (#ffffff)**: Background
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/yourusername/astroreflect-frontend.git
+   cd astroreflect-frontend
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Create a `.env` file:
+
+   ```
+   VITE_API_URL=http://localhost:3000/api
+   VITE_APP_NAME=AstroReflect
+   ```
+
+4. Start the development server:
+
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. Open your browser to `http://localhost:5173`
+
+## Building
+
+To build the app for production:
+
+```bash
+npm run build
+# or
+yarn build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+The build artifacts will be stored in the `dist/` directory.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Project Structure
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
 ```
+src/
+├── components/       # Reusable UI components
+├── pages/            # Page components
+├── services/         # API and data services
+├── styles/           # Global styles and SCSS variables
+├── types/            # TypeScript type definitions
+├── utils/            # Utility functions
+├── App.tsx           # Root component
+└── main.tsx          # Entry point
+```
+
+## Backend API
+
+This frontend connects to the [AstroReflect API](https://github.com/yourusername/astroreflect-api) for transit data and journal functionality. Make sure the API is running locally or provide the correct endpoint in your `.env` file.
