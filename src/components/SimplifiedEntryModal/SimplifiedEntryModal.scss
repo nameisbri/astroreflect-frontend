@@ -1,0 +1,253 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.simplified-entry-modal {
+  background-color: $background;
+  border-radius: $border-radius;
+  box-shadow: $shadow-lg;
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  max-height: 90vh;
+
+  .modal-header {
+    background-color: $primary;
+    color: white;
+    padding: $spacing-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    &.sextile {
+      background: linear-gradient(135deg, #0277bd, #039be5);
+    }
+    &.conjunction {
+      background: linear-gradient(135deg, #5e35b1, #7e57c2);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: $font-size-xl;
+      font-weight: 600;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity $transition-fast;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  .modal-content {
+    padding: $spacing-md;
+    flex: 1;
+    overflow-y: auto;
+
+    .description-section {
+      margin-bottom: $spacing-md;
+      padding-bottom: $spacing-md;
+      border-bottom: 1px solid $border-color;
+
+      p {
+        margin: 0;
+        line-height: 1.6;
+        color: $text-primary;
+      }
+    }
+
+    .dates-section {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: $spacing-md;
+      background-color: $surface;
+      padding: $spacing-md;
+      border-radius: $border-radius-sm;
+
+      .date-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+
+        &.exact {
+          font-weight: 600;
+          color: $primary;
+        }
+
+        .date-label {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          margin-bottom: $spacing-xs;
+        }
+
+        .date-value {
+          font-size: $font-size-base;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .journal-section {
+      .journal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $spacing-md;
+
+        h3 {
+          margin: 0;
+          color: $primary;
+          font-size: $font-size-lg;
+        }
+
+        .add-entry-button {
+          background-color: $accent;
+          color: white;
+          border: none;
+          border-radius: $border-radius-sm;
+          padding: $spacing-xs $spacing-sm;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background-color $transition-fast;
+
+          &:hover {
+            background-color: darken($accent, 10%);
+          }
+        }
+      }
+
+      .loading-message,
+      .error-message,
+      .no-entries-message {
+        text-align: center;
+        padding: $spacing-md;
+        color: $text-secondary;
+      }
+
+      .error-message {
+        color: #e74c3c;
+      }
+
+      .entries-list {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-md;
+
+        .journal-entry {
+          background-color: $surface;
+          border-radius: $border-radius-sm;
+          padding: $spacing-md;
+          border-left: 4px solid $primary;
+
+          margin-bottom: 10px;
+
+          .entry-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: $spacing-sm;
+
+            .entry-date {
+              font-size: $font-size-sm;
+              color: $text-secondary;
+            }
+
+            .entry-mood {
+              font-size: $font-size-sm;
+              color: $primary;
+              font-weight: 600;
+            }
+          }
+
+          .entry-content {
+            line-height: 1.6;
+            margin: 0 0 $spacing-sm 0;
+            white-space: pre-line;
+          }
+
+          .entry-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: $spacing-xs;
+
+            .tag {
+              background-color: $primary;
+              color: white;
+              font-size: $font-size-sm;
+              padding: 2px $spacing-xs;
+              border-radius: $border-radius-sm;
+              opacity: 0.8;
+              display: inline-block;
+              margin: 2px;
+              background-color: $primary;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Styles for different transit types (can be customized based on aspect type)
+.planet-position .modal-header {
+  background-color: $secondary;
+}
+
+.conjunction .modal-header {
+  background: linear-gradient(135deg, #5e35b1, #7e57c2);
+}
+
+.trine .modal-header {
+  background: linear-gradient(135deg, #2e7d32, #4caf50);
+}
+
+.square .modal-header {
+  background: linear-gradient(135deg, #c62828, #e53935);
+}
+
+.opposition .modal-header {
+  background: linear-gradient(135deg, #ad1457, #d81b60);
+}
+
+.sextile .modal-header {
+  background: linear-gradient(135deg, #0277bd, #039be5);
+}
+
+// Media queries for responsiveness
+@media (max-width: $breakpoint-md) {
+  .simplified-entry-modal {
+    max-width: 100%;
+    border-radius: 0;
+
+    .dates-section {
+      flex-direction: column;
+      gap: $spacing-sm;
+
+      .date-item {
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+
+        .date-label {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}
+
+.simplified-entry-modal {
+  // Style the entry list better
+  .journal-entry {
+  }
+}

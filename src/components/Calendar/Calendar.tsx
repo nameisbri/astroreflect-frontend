@@ -23,9 +23,9 @@ import {
   JournalEntry,
 } from "../../types/astrology";
 import { formatShortDate } from "../../utils/dateUtils";
-// Add these imports at the top of src/components/Calendar/Calendar.tsx
 import JournalEntryForm from "../JournalEntry/JournalEntryForm";
 import TransitCard from "../TransitCard/TransitCard";
+import SimplifiedEntryModal from "../SimplifiedEntryModal/SimplifiedEntryModal";
 import { v4 as uuidv4 } from "uuid";
 
 const Calendar = () => {
@@ -48,6 +48,8 @@ const Calendar = () => {
     transitTypeId: string;
   } | null>(null);
   const [showTransitDetail, setShowTransitDetail] = useState(false);
+  const [showEntryModal, setShowEntryModal] = useState(false);
+  const [entryModalData, setEntryModalData] = useState<any>(null);
 
   // Load transits for the current week and today's details on initial load
   useEffect(() => {
@@ -113,6 +115,32 @@ const Calendar = () => {
         console.error("Failed to refresh journal entries:", error);
       }
     }
+  };
+  // New function to handle viewing entries with simplified modal
+  const handleViewEntries = (
+    data: any,
+    isPlanetPosition: boolean = false,
+    event?: React.MouseEvent
+  ) => {
+    // Prevent event propagation to avoid double modal
+    if (event) {
+      event.stopPropagation();
+    }
+
+    setEntryModalData({
+      ...data,
+      isPlanetPosition,
+    });
+    setShowEntryModal(true);
+
+    // Make sure other modals are closed
+    setShowJournalForm(false);
+  };
+
+  // Function to close the entry modal
+  const handleCloseEntryModal = () => {
+    setShowEntryModal(false);
+    setEntryModalData(null);
   };
 
   const handleViewTransitDetail = (transit: Transit) => {
@@ -443,7 +471,7 @@ const Calendar = () => {
                     className="add-journal-button"
                     onClick={() => {
                       // Create a placeholder transit for planet position entries
-                      const placeholderId = uuidv4(); // You'll need to import this
+                      const placeholderId = uuidv4();
                       const transitTypeId = `${position.planet}_IN_${
                         position.sign?.name || "Aries"
                       }`;
@@ -454,18 +482,26 @@ const Calendar = () => {
                   </button>
                   <button
                     className="view-entries-button"
-                    onClick={() => {
-                      // Implement logic to view entries for this planet
-                      // Maybe fetch by transit type ID for the planet in this sign
-                      const transitTypeId = `${position.planet}_IN_${
-                        position.sign?.name || "Aries"
-                      }`;
-                      // For now, just alert
-                      alert(
-                        `View entries for ${position.planet} in ${
-                          position.sign?.name || "Unknown"
-                        }`
-                      );
+                    onClick={(e) => {
+                      // Prepare data for the modal
+                      const modalData = {
+                        id: uuidv4(), // Generate a unique ID for this view
+                        transitTypeId: `${position.planet}_IN_${
+                          position.sign?.name || "Aries"
+                        }`,
+                        title: `${position.planet} in ${
+                          position.sign?.name || "Aries"
+                        }`,
+                        description: `${position.planet} is moving through ${
+                          position.sign?.name || "Aries"
+                        }, infusing ${position.planet.toLowerCase()}-related matters with ${(
+                          position.sign?.name || "Aries"
+                        ).toLowerCase()} qualities.`,
+                        planet: position.planet,
+                        sign: position.sign?.name || "Aries",
+                      };
+
+                      handleViewEntries(modalData, true, e);
                     }}
                   >
                     View Entries
@@ -659,9 +695,17 @@ const Calendar = () => {
 
               return (
                 <div
-                  className="transit-card aspect-${aspectClass}"
+                  className={`transit-card ${aspectClass}`}
                   key={index}
-                  onClick={() => setSelectedTransit(transit)}
+                  onClick={(e) => {
+                    // When clicking on the card itself, show the entry modal
+                    const modalData = {
+                      ...transit,
+                      title: `${transit.planetA} ${transit.aspect} ${transit.planetB}`,
+                    };
+
+                    handleViewEntries(modalData, false, e);
+                  }}
                 >
                   <div className={`transit-card-header ${aspectClass}`}>
                     <div className="planet-symbols">
@@ -725,20 +769,17 @@ const Calendar = () => {
 
                   <div className="transit-actions">
                     <button
-                      className={`add-journal-button ${aspectClass}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddJournal(transit.id, transit.transitTypeId);
-                      }}
-                    >
-                      <span className="action-icon">✎</span>
-                      Add Journal Entry
-                    </button>
-                    <button
                       className="view-entries-button"
                       onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewTransitDetail(transit);
+                        e.stopPropagation(); // Prevent transit card click
+
+                        // Prepare data for the modal
+                        const modalData = {
+                          ...transit,
+                          title: `${transit.planetA} ${transit.aspect} ${transit.planetB}`,
+                        };
+
+                        handleViewEntries(modalData, false, e);
                       }}
                     >
                       <span className="action-icon">▤</span>
@@ -748,99 +789,6 @@ const Calendar = () => {
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Transit Detail Modal */}
-        {selectedTransit && (
-          <div className="transit-detail-modal">
-            <div className="modal-content">
-              <div
-                className={`modal-header aspect-${selectedTransit.aspect?.toLowerCase()}`}
-              >
-                <h3>
-                  {selectedTransit.planetA} {selectedTransit.aspect}{" "}
-                  {selectedTransit.planetB}
-                </h3>
-                <button
-                  className="close-button"
-                  onClick={() => setSelectedTransit(null)}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="modal-body">
-                <div className="transit-dates-detail">
-                  <div className="date-item">
-                    <span className="date-label">Start:</span>
-                    <span className="date-value">
-                      {format(selectedTransit.startDate, "MMM d")}
-                    </span>
-                  </div>
-                  <div className="date-item exact">
-                    <span className="date-label">Exact:</span>
-                    <span className="date-value">
-                      {format(selectedTransit.exactDate, "MMM d")}
-                    </span>
-                  </div>
-                  <div className="date-item">
-                    <span className="date-label">End:</span>
-                    <span className="date-value">
-                      {format(selectedTransit.endDate, "MMM d")}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="transit-status-detail">
-                  <div className="status-row">
-                    <span className="status-label">Status:</span>
-                    <span
-                      className={`status-value ${selectedTransit.timing?.toLowerCase()}`}
-                    >
-                      {selectedTransit.timing}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="transit-description-detail">
-                  <h4>Description</h4>
-                  <p>{selectedTransit.description}</p>
-                </div>
-
-                <div className="transit-interpretation">
-                  <h4>Astrological Meaning</h4>
-                  <p>
-                    {getDetailedInterpretation(
-                      selectedTransit.planetA,
-                      selectedTransit.aspect || "",
-                      selectedTransit.planetB || Planet.SUN
-                    )}
-                  </p>
-                </div>
-
-                <div className="journal-section">
-                  <div className="journal-header">
-                    <h4>Journal Entries</h4>
-                    <button
-                      className={`add-journal-button aspect-${selectedTransit.aspect?.toLowerCase()}`}
-                      onClick={() =>
-                        handleAddJournal(
-                          selectedTransit.id,
-                          selectedTransit.transitTypeId
-                        )
-                      }
-                    >
-                      Add Entry
-                    </button>
-                  </div>
-
-                  <div className="journal-placeholder">
-                    <p>No journal entries for this transit yet</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -984,15 +932,16 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Transit Detail Modal */}
-      {showTransitDetail && selectedTransit && (
+      {/* Simplified Entry Modal - replaces both old modals */}
+      {showEntryModal && entryModalData && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <TransitCard
-              transit={selectedTransit}
-              onClose={handleCloseTransitDetail}
+            <SimplifiedEntryModal
+              data={entryModalData}
+              onClose={handleCloseEntryModal}
               onAddJournal={(transitId, transitTypeId) => {
                 handleAddJournal(transitId, transitTypeId);
+                handleCloseEntryModal();
               }}
             />
           </div>
