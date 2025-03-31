@@ -104,3 +104,46 @@ export function getJournalPrompts(planetA: Planet, planetB?: Planet): string[] {
 
   return prompts;
 }
+
+export const SIGN_MEANINGS: Record<string, string> = {
+  "Aries": "Courage, initiative, and new beginnings",
+  "Taurus": "Stability, groundedness, and sensuality",
+  "Gemini": "Communication, curiosity, and adaptability",
+  "Cancer": "Nurturing, emotional sensitivity, and security",
+  "Leo": "Creativity, self-expression, and leadership",
+  "Virgo": "Analysis, practicality, and attention to detail",
+  "Libra": "Balance, harmony, and relationships",
+  "Scorpio": "Transformation, depth, and intensity",
+  "Sagittarius": "Expansion, optimism, and philosophy",
+  "Capricorn": "Ambition, discipline, and structure",
+  "Aquarius": "Innovation, independence, and humanitarianism",
+  "Pisces": "Sensitivity, intuition, and transcendence",
+};
+
+export function getSignMeaning(sign: string): string {
+  return SIGN_MEANINGS[sign] || "Unknown sign qualities";
+}
+
+export function getSignPrompts(planet: Planet, sign?: string): string[] {
+  const prompts: string[] = [];
+
+  if (!sign) return prompts;
+
+  switch (planet) {
+    case Planet.SUN:
+      prompts.push(`How is your identity expressing through ${sign} energy?`);
+      break;
+    case Planet.MOON:
+      prompts.push(`How are your emotions influenced by ${sign} qualities?`);
+      break;
+    case Planet.MERCURY:
+      prompts.push(`How is your thinking shaped by ${sign} characteristics?`);
+      break;
+    // Add more for other planets
+  }
+
+  // Generic prompts
+  prompts.push(`What ${sign} qualities are you noticing more in your life?`);
+
+  return prompts;
+}

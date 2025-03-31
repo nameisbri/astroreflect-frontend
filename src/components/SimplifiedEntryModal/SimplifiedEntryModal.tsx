@@ -5,8 +5,12 @@ import {
   fetchJournalEntriesForTransitType,
 } from "../../services/api";
 import { JournalEntry, Planet } from "../../types/astrology";
-import { formatShortDate } from "../../utils/dateUtils";
-import { PLANET_KEYWORDS, getJournalPrompts } from "../../utils/planetKeywords";
+import {
+  PLANET_KEYWORDS,
+  getJournalPrompts,
+  getSignMeaning,
+  getSignPrompts,
+} from "../../utils/planetKeywords";
 import "./SimplifiedEntryModal.scss";
 
 interface ModalData {
@@ -119,12 +123,19 @@ const SimplifiedEntryModal = ({
   };
 
   // Get journal prompts based on the planets involved
+
   const getPrompts = () => {
     const planetA = data.planetA || data.planet;
     const planetB = data.planetB;
 
     if (!planetA) return [];
 
+    // For planet-in-sign configurations
+    if (data.isPlanetPosition && data.sign) {
+      return getSignPrompts(planetA, data.sign);
+    }
+
+    // For planet-to-planet aspects
     return getJournalPrompts(planetA, planetB);
   };
 
@@ -159,16 +170,11 @@ const SimplifiedEntryModal = ({
             {renderPlanetKeywords(data.planetA || data.planet)}
             {renderPlanetKeywords(data.planetB)}
 
-            {data.aspect && (
+            {data.isPlanetPosition && data.sign && (
               <div className="aspect-context">
-                <span className="aspect-label">Aspect:</span>
+                <span className="aspect-label">In Sign:</span>
                 <span className="aspect-meaning">
-                  {data.aspect} -
-                  {data.aspect === "Conjunction" && " Blending of energies"}
-                  {data.aspect === "Sextile" && " Opportunity and harmony"}
-                  {data.aspect === "Square" && " Tension and growth"}
-                  {data.aspect === "Trine" && " Flow and ease"}
-                  {data.aspect === "Opposition" && " Balance and awareness"}
+                  {data.sign} - {getSignMeaning(data.sign)}
                 </span>
               </div>
             )}

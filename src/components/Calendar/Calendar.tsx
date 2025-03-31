@@ -22,6 +22,7 @@ import {
   PlanetPosition,
   JournalEntry,
 } from "../../types/astrology";
+import ActionButton from "../ActionButton/ActionButton";
 import { formatShortDate } from "../../utils/dateUtils";
 import JournalEntryForm from "../JournalEntry/JournalEntryForm";
 import SimplifiedAspectSection from "../SimplifiedAspectSection/SimplifiedAspectSection";
@@ -95,11 +96,7 @@ const Calendar = () => {
   const getJournalEntriesCountByTransitType = () => {
     const entriesCount: Record<string, number> = {};
 
-    // Get journal entries for the selected day and all days
     if (selectedDay) {
-      // We need to check all journal entries, not just for the selected day
-      // since entries are associated with transit types, not specific transits
-
       // Iterate through all entries in journalEntriesByDay
       Object.values(journalEntriesByDay).forEach((dayEntries) => {
         dayEntries.forEach((entry) => {
@@ -108,6 +105,16 @@ const Calendar = () => {
               (entriesCount[entry.transitTypeId] || 0) + 1;
           }
         });
+      });
+
+      // Generate planet-in-sign transit types for all positions
+      planetPositions.forEach((position) => {
+        const transitTypeId = `${position.planet}_IN_${
+          position.sign?.name || "Aries"
+        }`;
+        if (!entriesCount[transitTypeId]) {
+          entriesCount[transitTypeId] = 0;
+        }
       });
 
       console.log("Journal entries by transit type:", entriesCount);
@@ -166,10 +173,17 @@ const Calendar = () => {
       event.stopPropagation();
     }
 
-    setEntryModalData({
+    // Format the data consistently for both planet positions and transits
+    const modalData = {
       ...data,
       isPlanetPosition,
-    });
+      // Make sure these fields exist for proper keyword display
+      planetA: data.planetA || data.planet,
+      planetB: data.planetB,
+      aspect: data.aspect,
+    };
+
+    setEntryModalData(modalData);
     setShowEntryModal(true);
 
     // Make sure other modals are closed
@@ -506,8 +520,9 @@ const Calendar = () => {
                 </div>
 
                 <div className="planet-actions">
-                  <button
-                    className="add-journal-button"
+                  <ActionButton
+                    variant="accent"
+                    icon="✏️"
                     onClick={() => {
                       // Create a placeholder transit for planet position entries
                       const placeholderId = uuidv4();
@@ -522,9 +537,18 @@ const Calendar = () => {
                     }}
                   >
                     Add Entry
-                  </button>
-                  <button
-                    className="view-entries-button"
+                  </ActionButton>
+
+                  <ActionButton
+                    variant="secondary"
+                    icon="📓"
+                    badgeCount={
+                      getJournalEntriesCountByTransitType()[
+                        `${position.planet}_IN_${
+                          position.sign?.name || "Aries"
+                        }`
+                      ] || 0
+                    }
                     onClick={(e) => {
                       // Prepare data for the modal
                       const modalData = {
@@ -548,7 +572,7 @@ const Calendar = () => {
                     }}
                   >
                     View Entries
-                  </button>
+                  </ActionButton>
                 </div>
               </div>
             );
@@ -562,15 +586,12 @@ const Calendar = () => {
   const renderAspectTransits = () => {
     if (!selectedDay) return null;
 
-    // Get counts of journal entries by transit TYPE ID (not transit ID)
-    const journalEntriesByTransitType = getJournalEntriesCountByTransitType();
-
     return (
       <SimplifiedAspectSection
         transits={selectedDayTransits}
         isLoading={isLoadingDay}
         selectedDay={selectedDay}
-        journalEntriesByTransitType={journalEntriesByTransitType}
+        journalEntriesByTransitType={getJournalEntriesCountByTransitType()}
         onViewTransit={(transit) => {
           console.log(
             "Calendar: onViewTransit called with transit:",
