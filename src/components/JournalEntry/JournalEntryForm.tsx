@@ -1,5 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createJournalEntry } from "../../services/api";
+import {
+  getTransitKeywords,
+  getJournalPrompts,
+} from "../../utils/planetKeywords";
+import { Planet } from "../../types/astrology";
 import "./JournalEntry.scss";
 
 interface JournalEntryProps {
@@ -7,6 +12,9 @@ interface JournalEntryProps {
   transitTypeId: string;
   onSave: () => void;
   onCancel: () => void;
+  planetA?: Planet;
+  planetB?: Planet;
+  aspect?: string;
 }
 
 const JournalEntry = ({
@@ -14,12 +22,28 @@ const JournalEntry = ({
   transitTypeId,
   onSave,
   onCancel,
+  planetA,
+  planetB,
+  aspect,
 }: JournalEntryProps) => {
   const [content, setContent] = useState("");
   const [mood, setMood] = useState("");
   const [tags, setTags] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPrompts, setShowPrompts] = useState(true);
+
+  // Extract planet info from transitTypeId if not provided directly
+  useEffect(() => {
+    if (!planetA && transitTypeId) {
+      // Parse transitTypeId to extract planets and aspects
+      // Format is typically PLANETA_ASPECT_PLANETB or PLANET_IN_SIGN
+      const parts = transitTypeId.split("_");
+      if (parts.length >= 1) {
+        // Extract planet names
+      }
+    }
+  }, [transitTypeId, planetA, planetB]);
 
   // Predefined mood options
   const moodOptions = [
@@ -36,6 +60,56 @@ const JournalEntry = ({
     "Balanced",
     "Uncertain",
   ];
+
+  // Suggested tags based on transitTypeId
+  const getSuggestedTags = () => {
+    const tags: string[] = [];
+
+    // Extract potential tags from transitTypeId
+    if (transitTypeId) {
+      const parts = transitTypeId.split("_");
+
+      // Add planets as tags
+      parts.forEach((part) => {
+        if (
+          [
+            "SUN",
+            "MOON",
+            "MERCURY",
+            "VENUS",
+            "MARS",
+            "JUPITER",
+            "SATURN",
+            "URANUS",
+            "NEPTUNE",
+            "PLUTO",
+          ].includes(part)
+        ) {
+          tags.push(part.toLowerCase());
+        }
+      });
+
+      // Add aspect types
+      if (transitTypeId.includes("CONJUNCTION")) tags.push("conjunction");
+      if (transitTypeId.includes("OPPOSITION")) tags.push("opposition");
+      if (transitTypeId.includes("TRINE")) tags.push("trine");
+      if (transitTypeId.includes("SQUARE")) tags.push("square");
+      if (transitTypeId.includes("SEXTILE")) tags.push("sextile");
+
+      // Other transit subtypes
+      if (transitTypeId.includes("RETROGRADE")) tags.push("retrograde");
+      if (transitTypeId.includes("INGRESS")) tags.push("ingress");
+    }
+
+    return tags;
+  };
+
+  // Get journal prompts
+  const getPrompts = () => {
+    if (!planetA) return [];
+
+    return getJournalPrompts(planetA, planetB);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +156,73 @@ const JournalEntry = ({
     }
   };
 
+  // Handle applying suggested tags
+  const handleSuggestedTagClick = (tag: string) => {
+    // Add the tag to the current tags
+    const currentTags = tags ? tags.split(",").map((t) => t.trim()) : [];
+
+    // Only add if not already included
+    if (!currentTags.includes(tag)) {
+      const newTags = [...currentTags, tag].join(", ");
+      setTags(newTags);
+    }
+  };
+
+  // Suggested tags component
+  const SuggestedTags = () => {
+    const suggestedTags = getSuggestedTags();
+
+    if (suggestedTags.length === 0) return null;
+
+    return (
+      <div className="suggested-tags">
+        <span className="suggested-label">Suggested tags:</span>
+        <div className="tag-buttons">
+          {suggestedTags.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className="tag-button"
+              onClick={() => handleSuggestedTagClick(tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Journal prompts component
+  const JournalPrompts = () => {
+    const prompts = getPrompts();
+
+    if (prompts.length === 0) return null;
+
+    return (
+      <div className="journal-prompts">
+        <div className="prompts-header">
+          <h4>Reflection Prompts</h4>
+          <button
+            type="button"
+            className="toggle-prompts"
+            onClick={() => setShowPrompts(!showPrompts)}
+          >
+            {showPrompts ? "Hide" : "Show"}
+          </button>
+        </div>
+
+        {showPrompts && (
+          <ul className="prompts-list">
+            {prompts.map((prompt, index) => (
+              <li key={index}>{prompt}</li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="journal-entry-form">
       <div className="journal-form-header">
@@ -92,6 +233,9 @@ const JournalEntry = ({
       </div>
 
       <form onSubmit={handleSubmit}>
+        {/* Journal prompts to help the user reflect */}
+        <JournalPrompts />
+
         <div className="form-group">
           <label htmlFor="mood">Mood</label>
           <div className="mood-selector">
@@ -138,6 +282,7 @@ const JournalEntry = ({
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
+          <SuggestedTags />
         </div>
 
         {error && <div className="error-message">{error}</div>}

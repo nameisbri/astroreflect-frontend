@@ -268,7 +268,7 @@
           display: flex;
           justify-content: space-between;
           margin-bottom: $spacing-md;
-          padding-bottom: $spacing-md;
+          padding-bottom: $spacing-sm;
           border-bottom: 1px solid $border-color;
 
           .date {
@@ -289,6 +289,35 @@
             &.exact .value {
               color: $primary;
               font-weight: 600;
+            }
+          }
+        }
+
+        .keywords-container {
+          padding: $spacing-xs $spacing-sm;
+          background-color: rgba($primary, 0.05);
+          border-radius: $border-radius-sm;
+          margin-bottom: $spacing-sm;
+
+          .planet-keywords {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: $spacing-xs;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .planet-name {
+              font-weight: 600;
+              color: $primary;
+              min-width: 60px;
+              margin-right: $spacing-xs;
+            }
+
+            .keywords {
+              color: $text-primary;
+              font-size: $font-size-sm;
             }
           }
         }
