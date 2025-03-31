@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import {
   fetchJournalEntriesForTransit,
   fetchJournalEntriesForTransitType,
@@ -36,6 +36,28 @@ const SimplifiedEntryModal = ({
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Improved date formatting function
+  const formatDateSafely = (dateValue: Date | string | undefined): string => {
+    if (!dateValue) return "Unknown date";
+
+    try {
+      // Handle both Date objects and ISO strings
+      const dateObj =
+        typeof dateValue === "string" ? parseISO(dateValue) : dateValue;
+
+      // Verify the date is valid
+      if (isNaN(dateObj.getTime())) {
+        console.warn("Invalid date:", dateValue);
+        return "Unknown date";
+      }
+
+      return format(dateObj, "MMM d, yyyy");
+    } catch (error) {
+      console.error("Error formatting date:", error, dateValue);
+      return "Unknown date";
+    }
+  };
 
   useEffect(() => {
     const loadJournalEntries = async () => {
@@ -97,20 +119,18 @@ const SimplifiedEntryModal = ({
       </div>
 
       <div className="modal-content">
-        {}
         {data.description && (
           <div className="description-section">
             <p>{data.description}</p>
           </div>
         )}
 
-        {}
         {!data.isPlanetPosition && data.startDate && data.endDate && (
           <div className="dates-section">
             <div className="date-item">
               <span className="date-label">Start:</span>
               <span className="date-value">
-                {formatShortDate(data.startDate)}
+                {formatDateSafely(data.startDate)}
               </span>
             </div>
 
@@ -118,7 +138,7 @@ const SimplifiedEntryModal = ({
               <div className="date-item exact">
                 <span className="date-label">Exact:</span>
                 <span className="date-value">
-                  {formatShortDate(data.exactDate)}
+                  {formatDateSafely(data.exactDate)}
                 </span>
               </div>
             )}
@@ -126,13 +146,12 @@ const SimplifiedEntryModal = ({
             <div className="date-item">
               <span className="date-label">End:</span>
               <span className="date-value">
-                {formatShortDate(data.endDate)}
+                {formatDateSafely(data.endDate)}
               </span>
             </div>
           </div>
         )}
 
-        {}
         <div className="journal-section">
           <div className="journal-header">
             <h3>Journal Entries</h3>
@@ -161,9 +180,7 @@ const SimplifiedEntryModal = ({
               <div className="journal-entry" key={entry.id}>
                 <div className="entry-header">
                   <span className="entry-date">
-                    {entry.createdAt
-                      ? formatShortDate(entry.createdAt)
-                      : "Unknown date"}
+                    {formatDateSafely(entry.createdAt)}
                   </span>
                   {entry.mood && (
                     <span className="entry-mood">{entry.mood}</span>
