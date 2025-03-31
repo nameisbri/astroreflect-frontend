@@ -1,0 +1,437 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.simplified-aspect-section {
+  background-color: $surface;
+  border-radius: $border-radius;
+  box-shadow: $shadow;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-xl;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-lg;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+
+    h3 {
+      color: $primary;
+      margin: 0;
+      font-size: $font-size-xl;
+      font-weight: 600;
+    }
+
+    .aspect-filters {
+      display: flex;
+      gap: $spacing-xs;
+      flex-wrap: wrap;
+
+      .filter-btn {
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-sm;
+        border: 1px solid $border-color;
+        background-color: $background;
+        font-size: $font-size-sm;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+          background-color: rgba($primary, 0.05);
+          border-color: $primary;
+        }
+
+        &.active {
+          background-color: $primary;
+          color: white;
+          border-color: $primary;
+        }
+
+        // Aspect-specific coloring when active
+        &.aspect-conjunction.active {
+          background-color: $primary;
+          border-color: $primary;
+        }
+
+        &.aspect-trine.active {
+          background-color: $secondary;
+          border-color: $secondary;
+        }
+
+        &.aspect-square.active {
+          background-color: $accent;
+          border-color: $accent;
+        }
+
+        &.aspect-opposition.active {
+          background-color: darken($primary, 10%);
+          border-color: darken($primary, 10%);
+        }
+
+        &.aspect-sextile.active {
+          background-color: lighten($secondary, 10%);
+          border-color: lighten($secondary, 10%);
+        }
+      }
+    }
+  }
+
+  .loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: $spacing-xl;
+    color: $text-secondary;
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba($primary, 0.2);
+      border-radius: 50%;
+      border-top-color: $primary;
+      animation: spin 1s linear infinite;
+      margin-bottom: $spacing-md;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: $spacing-lg $spacing-md;
+    color: $text-secondary;
+
+    p {
+      margin-bottom: $spacing-md;
+      font-size: $font-size-base;
+    }
+
+    .empty-subtext {
+      display: block;
+      font-size: $font-size-sm;
+      opacity: 0.8;
+      margin-top: $spacing-xs;
+    }
+
+    .reset-filter {
+      padding: $spacing-xs $spacing-md;
+      background-color: rgba($primary, 0.1);
+      border: 1px solid $primary;
+      color: $primary;
+      border-radius: $border-radius-sm;
+      cursor: pointer;
+      transition: all $transition-fast;
+      font-size: $font-size-sm;
+
+      &:hover {
+        background-color: rgba($primary, 0.2);
+      }
+    }
+  }
+
+  .transit-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: $spacing-md;
+
+    .transit-card {
+      background-color: $background;
+      border-radius: $border-radius;
+      box-shadow: $shadow-sm;
+      overflow: hidden;
+      transition: transform $transition, box-shadow $transition;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow;
+      }
+
+      .card-header {
+        padding: $spacing-md;
+        color: $text-primary;
+        border-bottom: 2px solid $primary;
+        position: relative;
+
+        .aspect-symbols {
+          display: flex;
+          justify-content: center;
+          gap: $spacing-md;
+          margin-bottom: $spacing-xs;
+          font-size: $font-size-xl;
+
+          .planet-a,
+          .planet-b {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba($primary, 0.1);
+            border-radius: 50%;
+          }
+
+          .aspect-symbol {
+            align-self: center;
+            font-size: $font-size-lg;
+          }
+        }
+
+        .aspect-title {
+          text-align: center;
+          font-weight: 600;
+          margin-bottom: $spacing-xs;
+        }
+
+        .timing-badge {
+          position: absolute;
+          top: $spacing-sm;
+          right: $spacing-sm;
+          font-size: $font-size-sm;
+          padding: 2px $spacing-xs;
+          border-radius: $border-radius-sm;
+          background-color: $border-color;
+          color: $text-secondary;
+
+          &.active {
+            background-color: $accent;
+            color: white;
+          }
+
+          &.applying {
+            background-color: $primary;
+            color: white;
+          }
+
+          &.separating {
+            background-color: $secondary;
+            color: white;
+          }
+
+          &.upcoming {
+            background-color: $border-color;
+            color: $text-secondary;
+          }
+        }
+
+        // Aspect-specific styling
+        &.aspect-conjunction {
+          border-color: $primary;
+          .planet-a,
+          .planet-b {
+            background-color: rgba($primary, 0.15);
+          }
+        }
+
+        &.aspect-trine {
+          border-color: $secondary;
+          .planet-a,
+          .planet-b {
+            background-color: rgba($secondary, 0.15);
+          }
+        }
+
+        &.aspect-square {
+          border-color: $accent;
+          .planet-a,
+          .planet-b {
+            background-color: rgba($accent, 0.15);
+          }
+        }
+
+        &.aspect-opposition {
+          border-color: darken($primary, 10%);
+          .planet-a,
+          .planet-b {
+            background-color: rgba(darken($primary, 10%), 0.15);
+          }
+        }
+
+        &.aspect-sextile {
+          border-color: lighten($secondary, 10%);
+          .planet-a,
+          .planet-b {
+            background-color: rgba(lighten($secondary, 10%), 0.15);
+          }
+        }
+      }
+
+      .card-body {
+        padding: $spacing-md;
+
+        .dates {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: $spacing-md;
+          padding-bottom: $spacing-md;
+          border-bottom: 1px solid $border-color;
+
+          .date {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            .label {
+              font-size: $font-size-sm;
+              color: $text-secondary;
+              margin-bottom: $spacing-xs;
+            }
+
+            .value {
+              font-weight: 500;
+            }
+
+            &.exact .value {
+              color: $primary;
+              font-weight: 600;
+            }
+          }
+        }
+
+        .description {
+          font-size: $font-size-sm;
+          line-height: 1.5;
+          color: $text-primary;
+          margin: 0;
+          height: 4.5em; // Approximately 3 lines
+          overflow: hidden;
+        }
+      }
+
+      .card-actions {
+        display: flex;
+        padding: $spacing-sm;
+        background-color: rgba($surface, 0.5);
+        border-top: 1px solid $border-color;
+        gap: $spacing-sm;
+
+        .btn {
+          flex: 1;
+          padding: $spacing-xs $spacing-sm;
+          border-radius: $border-radius-sm;
+          border: none;
+          cursor: pointer;
+          font-size: $font-size-sm;
+          font-weight: 500;
+          transition: all $transition-fast;
+          text-align: center;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: $spacing-xs;
+
+          .action-icon {
+            font-size: 14px;
+          }
+        }
+
+        .entries-btn {
+          background-color: $secondary;
+          color: white;
+          position: relative;
+
+          &:hover {
+            background-color: darken($secondary, 5%);
+          }
+
+          .entry-count-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: $accent;
+            color: white;
+            border-radius: 50%;
+            min-width: 18px;
+            height: 18px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 2px;
+            font-weight: bold;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+          }
+        }
+
+        .add-btn {
+          background-color: $accent;
+          color: white;
+
+          &:hover {
+            background-color: darken($accent, 5%);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Media queries for responsiveness
+@media (max-width: $breakpoint-md) {
+  .simplified-aspect-section {
+    padding: $spacing-md;
+
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      h3 {
+        margin-bottom: $spacing-sm;
+      }
+
+      .aspect-filters {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: $spacing-xs;
+
+        .filter-btn {
+          white-space: nowrap;
+        }
+      }
+    }
+
+    .transit-list {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .simplified-aspect-section {
+    padding: $spacing-sm;
+
+    .section-header h3 {
+      font-size: $font-size-lg;
+    }
+
+    .transit-card {
+      .card-header {
+        padding: $spacing-sm;
+
+        .aspect-symbols {
+          gap: $spacing-sm;
+
+          .planet-a,
+          .planet-b {
+            width: 32px;
+            height: 32px;
+          }
+        }
+      }
+
+      .card-body {
+        padding: $spacing-sm;
+
+        .dates {
+          margin-bottom: $spacing-sm;
+          padding-bottom: $spacing-sm;
+        }
+      }
+    }
+  }
+}

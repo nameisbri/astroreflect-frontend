@@ -24,7 +24,7 @@ import {
 } from "../../types/astrology";
 import { formatShortDate } from "../../utils/dateUtils";
 import JournalEntryForm from "../JournalEntry/JournalEntryForm";
-import TransitCard from "../TransitCard/TransitCard";
+import SimplifiedAspectSection from "../SimplifiedAspectSection/SimplifiedAspectSection";
 import SimplifiedEntryModal from "../SimplifiedEntryModal/SimplifiedEntryModal";
 import { v4 as uuidv4 } from "uuid";
 
@@ -87,6 +87,30 @@ const Calendar = () => {
   const getJournalEntriesForDay = (day: Date): JournalEntry[] => {
     const dayKey = format(day, "yyyy-MM-dd");
     return journalEntriesByDay[dayKey] || [];
+  };
+
+  const getJournalEntriesCountByTransitType = () => {
+    const entriesCount: Record<string, number> = {};
+
+    // Get journal entries for the selected day and all days
+    if (selectedDay) {
+      // We need to check all journal entries, not just for the selected day
+      // since entries are associated with transit types, not specific transits
+
+      // Iterate through all entries in journalEntriesByDay
+      Object.values(journalEntriesByDay).forEach((dayEntries) => {
+        dayEntries.forEach((entry) => {
+          if (entry.transitTypeId) {
+            entriesCount[entry.transitTypeId] =
+              (entriesCount[entry.transitTypeId] || 0) + 1;
+          }
+        });
+      });
+
+      console.log("Journal entries by transit type:", entriesCount);
+    }
+
+    return entriesCount;
   };
 
   // Add these functions inside the Calendar component
@@ -546,255 +570,55 @@ const Calendar = () => {
   const renderAspectTransits = () => {
     if (!selectedDay) return null;
 
-    if (isLoadingDay) {
-      return (
-        <div className="loading-transits">
-          <div className="loading-spinner"></div>
-          <p>Loading transit details...</p>
-        </div>
-      );
-    }
-
-    // Filter to only include two-planet transits (aspects)
-    const aspectTransits = selectedDayTransits.filter(
-      (transit) => transit.planetB
-    );
-
-    if (aspectTransits.length === 0) {
-      return (
-        <div className="aspect-transits">
-          <div className="aspect-header">
-            <h3>Planetary Aspects</h3>
-          </div>
-          <div className="no-transits">
-            <div className="empty-state-icon">○</div>
-            <p>
-              No planetary aspects on{" "}
-              {format(selectedDay, "EEEE, MMMM d, yyyy")}
-            </p>
-            <p className="empty-state-subtext">
-              Check another day or adjust your filter settings
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    // Filter transits based on selected aspect type
-    const filteredTransits =
-      aspectFilter === "all"
-        ? aspectTransits
-        : aspectTransits.filter(
-            (transit) => transit.aspect?.toLowerCase() === aspectFilter
-          );
-
-    // Get unique aspect types for the filter
-    const aspectTypes = Array.from(
-      new Set(aspectTransits.map((transit) => transit.aspect))
-    ).filter(Boolean);
-
-    // Sort transits by intensity (if available) or by planet importance
-    const sortedTransits = [...filteredTransits].sort((a, b) => {
-      // First by intensity if available
-      if (a.intensity !== undefined && b.intensity !== undefined) {
-        return b.intensity - a.intensity;
-      }
-
-      // Then by timing (Active > Applying > Separating > Upcoming)
-      const timingOrder: Record<string, number> = {
-        "Active": 0,
-        "Applying": 1,
-        "Separating": 2,
-        "Upcoming": 3,
-      };
-
-      const timingA = a.timing ? timingOrder[a.timing] || 4 : 4;
-      const timingB = b.timing ? timingOrder[b.timing] || 4 : 4;
-
-      if (timingA !== timingB) {
-        return timingA - timingB;
-      }
-
-      // Finally by planet importance
-      return getPlanetImportance(a.planetA) - getPlanetImportance(b.planetA);
-    });
+    // Get counts of journal entries by transit TYPE ID (not transit ID)
+    const journalEntriesByTransitType = getJournalEntriesCountByTransitType();
 
     return (
-      <div className="aspect-transits">
-        <div className="aspect-header">
-          <h3>Planetary Aspects</h3>
-          <div className="aspect-filters">
-            <button
-              className={`filter-button ${
-                aspectFilter === "all" ? "active" : ""
-              }`}
-              onClick={() => setAspectFilter("all")}
-            >
-              All
-            </button>
-            {aspectTypes.map((aspect) => (
-              <button
-                key={aspect}
-                className={`filter-button ${
-                  aspectFilter === aspect?.toLowerCase() ? "active" : ""
-                } aspect-${aspect?.toLowerCase()}`}
-                onClick={() => setAspectFilter(aspect?.toLowerCase())}
-              >
-                {getAspectSymbol(aspect || "")} {aspect}
-              </button>
-            ))}
-          </div>
-        </div>
+      <SimplifiedAspectSection
+        transits={selectedDayTransits}
+        isLoading={isLoadingDay}
+        selectedDay={selectedDay}
+        journalEntriesByTransitType={journalEntriesByTransitType}
+        onViewTransit={(transit) => {
+          console.log(
+            "Calendar: onViewTransit called with transit:",
+            transit.id,
+            "type:",
+            transit.transitTypeId
+          );
 
-        {filteredTransits.length === 0 ? (
-          <div className="no-transits">
-            <p>No {aspectFilter} aspects found on this day</p>
-            <button
-              className="reset-filter-button"
-              onClick={() => setAspectFilter("all")}
-            >
-              Show all aspects
-            </button>
-          </div>
-        ) : (
-          <div className="transit-grid">
-            {sortedTransits.map((transit, index) => {
-              // Determine the aspect color class
-              const aspectClass = transit.aspect?.toLowerCase() || "";
+          // Make sure we have a transitTypeId - it's crucial for retrieving entries
+          if (!transit.transitTypeId) {
+            console.error("Missing transitTypeId for transit:", transit.id);
+            // You might want to show an error message to the user here
+            return;
+          }
 
-              // Determine the timing badge
-              const timingBadge = transit.timing || "Unknown";
+          // Modified to use the more appropriate simplified entry modal with clearer reference to transitTypeId
+          const modalData = {
+            ...transit,
+            title: `${transit.planetA} ${transit.aspect} ${transit.planetB}`,
+            // Ensure the transitTypeId is properly included
+            transitTypeId: transit.transitTypeId,
+          };
 
-              // Calculate dates for display
-              const exactDate =
-                typeof transit.exactDate === "string"
-                  ? parseISO(transit.exactDate)
-                  : transit.exactDate;
+          console.log("Setting modal data:", modalData);
+          setEntryModalData(modalData);
+          setShowEntryModal(true);
+        }}
+        onAddJournal={(transitId, transitTypeId) => {
+          console.log(
+            "Calendar: onAddJournal called with:",
+            transitId,
+            transitTypeId
+          );
 
-              const startDate =
-                typeof transit.startDate === "string"
-                  ? parseISO(transit.startDate)
-                  : transit.startDate;
-
-              const endDate =
-                typeof transit.endDate === "string"
-                  ? parseISO(transit.endDate)
-                  : transit.endDate;
-
-              // Calculate progress through transit (as percentage)
-              const today = new Date();
-              let progressPercent = 0;
-
-              if (today >= startDate && today <= endDate) {
-                const totalDuration = endDate.getTime() - startDate.getTime();
-                const elapsed = today.getTime() - startDate.getTime();
-                progressPercent = Math.floor((elapsed / totalDuration) * 100);
-              } else if (today > endDate) {
-                progressPercent = 100;
-              }
-
-              return (
-                <div
-                  className={`transit-card ${aspectClass}`}
-                  key={index}
-                  onClick={(e) => {
-                    // When clicking on the card itself, show the entry modal
-                    const modalData = {
-                      ...transit,
-                      title: `${transit.planetA} ${transit.aspect} ${transit.planetB}`,
-                    };
-
-                    handleViewEntries(modalData, false, e);
-                  }}
-                >
-                  <div className={`transit-card-header ${aspectClass}`}>
-                    <div className="planet-symbols">
-                      <span className="planet-symbol">
-                        {getPlanetSymbol(transit.planetA)}
-                      </span>
-                      <span className="aspect-symbol">
-                        {getAspectSymbol(transit.aspect || "")}
-                      </span>
-                      <span className="planet-symbol">
-                        {getPlanetSymbol(transit.planetB || Planet.SUN)}
-                      </span>
-                    </div>
-                    <h4>
-                      {transit.planetA} {transit.aspect} {transit.planetB}
-                    </h4>
-                    <div
-                      className={`timing-badge ${timingBadge.toLowerCase()}`}
-                    >
-                      {timingBadge}
-                    </div>
-                  </div>
-
-                  <div className="transit-progress">
-                    <div className="progress-bar">
-                      <div
-                        className={`progress-fill ${aspectClass}`}
-                        style={{ width: `${progressPercent}%` }}
-                      ></div>
-                    </div>
-                    <div className="timeline-marks">
-                      <div className="start-date">
-                        {format(startDate, "MMM d")}
-                      </div>
-                      <div className="exact-date">
-                        <span className="exact-marker">●</span>
-                        <span className="exact-label">Exact</span>
-                      </div>
-                      <div className="end-date">{format(endDate, "MMM d")}</div>
-                    </div>
-                  </div>
-
-                  <div className="transit-content">
-                    <div className="exact-date-row">
-                      <span className="date-label">Exact:</span>
-                      <span className="date-value">
-                        {format(exactDate, "MMM d")}
-                      </span>
-                    </div>
-
-                    <div className="transit-description">
-                      {transit.description && (
-                        <p className="description-text">
-                          {transit.description.length > 120
-                            ? `${transit.description.slice(0, 120)}...`
-                            : transit.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="transit-actions">
-                    <button
-                      className="view-entries-button"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent transit card click
-
-                        // Prepare data for the modal
-                        const modalData = {
-                          ...transit,
-                          title: `${transit.planetA} ${transit.aspect} ${transit.planetB}`,
-                        };
-
-                        handleViewEntries(modalData, false, e);
-                      }}
-                    >
-                      <span className="action-icon">▤</span>
-                      View Entries
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          setSelectedJournalTransit({ transitId, transitTypeId });
+          setShowJournalForm(true);
+        }}
+      />
     );
   };
-
   // Render calendar legend to explain the indicators
   const renderCalendarLegend = () => (
     <div className="calendar-legend">

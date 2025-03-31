@@ -1,0 +1,138 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  transition: all $transition-fast;
+  position: relative;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  min-height: 36px;
+
+  &:focus {
+    outline: 2px solid rgba($primary, 0.5);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .button-icon {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .badge-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: $accent;
+    color: white;
+    border-radius: 50%;
+    min-width: 18px;
+    height: 18px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 2px;
+    font-weight: bold;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  // Variants
+  &.primary {
+    background-color: $primary;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($primary, 5%);
+    }
+
+    &:active:not(:disabled) {
+      background-color: darken($primary, 10%);
+    }
+  }
+
+  &.secondary {
+    background-color: $secondary;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($secondary, 5%);
+    }
+
+    &:active:not(:disabled) {
+      background-color: darken($secondary, 10%);
+    }
+  }
+
+  &.accent {
+    background-color: $accent;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($accent, 5%);
+    }
+
+    &:active:not(:disabled) {
+      background-color: darken($accent, 10%);
+    }
+  }
+
+  // Outline variants
+  &.primary-outline {
+    background-color: transparent;
+    color: $primary;
+    border: 1px solid $primary;
+
+    &:hover:not(:disabled) {
+      background-color: rgba($primary, 0.05);
+    }
+
+    &:active:not(:disabled) {
+      background-color: rgba($primary, 0.1);
+    }
+  }
+
+  &.secondary-outline {
+    background-color: transparent;
+    color: $secondary;
+    border: 1px solid $secondary;
+
+    &:hover:not(:disabled) {
+      background-color: rgba($secondary, 0.05);
+    }
+
+    &:active:not(:disabled) {
+      background-color: rgba($secondary, 0.1);
+    }
+  }
+
+  &.accent-outline {
+    background-color: transparent;
+    color: $accent;
+    border: 1px solid $accent;
+
+    &:hover:not(:disabled) {
+      background-color: rgba($accent, 0.05);
+    }
+
+    &:active:not(:disabled) {
+      background-color: rgba($accent, 0.1);
+    }
+  }
+}
