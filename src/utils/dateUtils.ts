@@ -115,3 +115,63 @@ export const isToday = (date: Date | string | undefined): boolean => {
     return false;
   }
 };
+
+/**
+ * Parses various date formats including PostgreSQL timestamps with timezone
+ */
+export const parseFlexibleDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+
+  try {
+    // Handle string inputs
+    if (typeof dateValue === "string") {
+      // Check for PostgreSQL timestamp format with timezone (YYYY-MM-DD HH:MM:SS.sss-04)
+      const pgTimestampRegex =
+        /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d+)?(-\d{2})?$/;
+
+      if (pgTimestampRegex.test(dateValue)) {
+        // Direct conversion of PostgreSQL timestamp to ISO format
+        // Replace space with T and ensure timezone is handled correctly
+        let isoString = dateValue.replace(" ", "T");
+
+        // If there's no timezone or it's not properly formatted, handle it
+        if (!isoString.includes("Z") && !isoString.includes("+")) {
+          // If it has a negative timezone like -04, it's already in proper format
+          if (!/-\d{2}$/.test(isoString)) {
+            isoString += "Z"; // Add Z for UTC if no timezone specified
+          }
+        }
+
+        console.log("Converting PG timestamp to ISO:", isoString);
+        const date = new Date(isoString);
+
+        // Validate the parsed date
+        if (!isNaN(date.getTime())) {
+          return date;
+        } else {
+          console.warn("Failed to parse PostgreSQL timestamp:", dateValue);
+          // Try one more fallback approach for PostgreSQL format
+          const [datePart, timePart] = dateValue.split(" ");
+          if (datePart && timePart) {
+            return new Date(`${datePart}T${timePart}`);
+          }
+        }
+      } else {
+        // Standard date parsing for other formats
+        const date = new Date(dateValue);
+        if (!isNaN(date.getTime())) {
+          return date;
+        }
+      }
+    } else if (dateValue instanceof Date) {
+      // Already a date object
+      return dateValue;
+    }
+
+    console.warn("Unparseable date format:", dateValue);
+    return null;
+  } catch (error) {
+    console.error("Error parsing date:", dateValue, error);
+    return null;
+  }
+};
