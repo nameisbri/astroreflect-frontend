@@ -6,6 +6,7 @@ import {
 } from "../../services/api";
 import { JournalEntry, Planet } from "../../types/astrology";
 import { formatShortDate } from "../../utils/dateUtils";
+import { PLANET_KEYWORDS, getJournalPrompts } from "../../utils/planetKeywords";
 import "./SimplifiedEntryModal.scss";
 
 interface ModalData {
@@ -18,14 +19,22 @@ interface ModalData {
   endDate?: Date | string;
   isPlanetPosition?: boolean;
   planet?: Planet;
-  sign?: string;
+  planetA?: Planet;
+  planetB?: Planet;
   aspect?: string;
+  sign?: string;
 }
 
 interface SimplifiedEntryModalProps {
   data: ModalData;
   onClose: () => void;
-  onAddJournal: (transitId: string, transitTypeId: string) => void;
+  onAddJournal: (
+    transitId: string,
+    transitTypeId: string,
+    planetA?: Planet,
+    planetB?: Planet,
+    aspect?: string
+  ) => void;
 }
 
 const SimplifiedEntryModal = ({
@@ -109,6 +118,30 @@ const SimplifiedEntryModal = ({
     return "";
   };
 
+  // Get journal prompts based on the planets involved
+  const getPrompts = () => {
+    const planetA = data.planetA || data.planet;
+    const planetB = data.planetB;
+
+    if (!planetA) return [];
+
+    return getJournalPrompts(planetA, planetB);
+  };
+
+  // Render keywords for a planet
+  const renderPlanetKeywords = (planet?: Planet) => {
+    if (!planet) return null;
+
+    const keywords = PLANET_KEYWORDS[planet] || [];
+
+    return (
+      <div className="planet-keyword-item">
+        <span className="planet-name">{planet}:</span>
+        <span className="keywords">{keywords.join(", ")}</span>
+      </div>
+    );
+  };
+
   return (
     <div className={`simplified-entry-modal ${getModalClass()}`}>
       <div className="modal-header">
@@ -119,11 +152,38 @@ const SimplifiedEntryModal = ({
       </div>
 
       <div className="modal-content">
-        {data.description && (
-          <div className="description-section">
-            <p>{data.description}</p>
+        {/* Keywords section instead of description */}
+        <div className="keywords-section">
+          <h3>Focus Areas</h3>
+          <div className="keywords-container">
+            {renderPlanetKeywords(data.planetA || data.planet)}
+            {renderPlanetKeywords(data.planetB)}
+
+            {data.aspect && (
+              <div className="aspect-context">
+                <span className="aspect-label">Aspect:</span>
+                <span className="aspect-meaning">
+                  {data.aspect} -
+                  {data.aspect === "Conjunction" && " Blending of energies"}
+                  {data.aspect === "Sextile" && " Opportunity and harmony"}
+                  {data.aspect === "Square" && " Tension and growth"}
+                  {data.aspect === "Trine" && " Flow and ease"}
+                  {data.aspect === "Opposition" && " Balance and awareness"}
+                </span>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Journal Prompts */}
+          <div className="journal-prompts">
+            <h4>Reflection Prompts</h4>
+            <ul>
+              {getPrompts().map((prompt, index) => (
+                <li key={index}>{prompt}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
 
         {!data.isPlanetPosition && data.startDate && data.endDate && (
           <div className="dates-section">
@@ -157,7 +217,15 @@ const SimplifiedEntryModal = ({
             <h3>Journal Entries</h3>
             <button
               className="add-entry-button"
-              onClick={() => onAddJournal(data.id, data.transitTypeId)}
+              onClick={() =>
+                onAddJournal(
+                  data.id,
+                  data.transitTypeId,
+                  data.planetA || data.planet,
+                  data.planetB,
+                  data.aspect
+                )
+              }
             >
               Add Entry
             </button>

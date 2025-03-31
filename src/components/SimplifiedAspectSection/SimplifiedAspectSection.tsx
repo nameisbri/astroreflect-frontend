@@ -2,6 +2,10 @@ import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { Transit, Planet, Aspect } from "../../types/astrology";
 import ActionButton from "../ActionButton/ActionButton";
+import {
+  getTransitKeywords,
+  PLANET_KEYWORDS,
+} from "../../utils/planetKeywords";
 import "./SimplifiedAspectSection.scss";
 
 interface SimplifiedAspectSectionProps {
@@ -10,7 +14,11 @@ interface SimplifiedAspectSectionProps {
   selectedDay: Date;
   journalEntriesByTransitType?: Record<string, number>; // Count of entries by transitTypeId
   onViewTransit: (transit: Transit) => void;
-  onAddJournal: (transitId: string, transitTypeId: string) => void;
+  onAddJournal: (
+    transitId: string,
+    transitTypeId: string,
+    transit: Transit
+  ) => void;
 }
 
 const SimplifiedAspectSection = ({
@@ -37,12 +45,6 @@ const SimplifiedAspectSection = ({
   // Handler for viewing transit entries
   const handleViewEntries = (transit: Transit, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent event bubbling
-    console.log(
-      "View entries clicked for transit:",
-      transit.id,
-      "type:",
-      transit.transitTypeId
-    );
     onViewTransit(transit);
   };
 
@@ -50,11 +52,19 @@ const SimplifiedAspectSection = ({
   const handleAddJournal = (
     transitId: string,
     transitTypeId: string,
+    transit: Transit,
     event: React.MouseEvent
   ) => {
     event.stopPropagation(); // Prevent event bubbling
-    console.log("Add journal clicked for transit:", transitId, transitTypeId);
-    onAddJournal(transitId, transitTypeId);
+    console.log(
+      "Add journal clicked for transit:",
+      transitId,
+      transitTypeId,
+      transit.planetA,
+      transit.aspect,
+      transit.planetB
+    );
+    onAddJournal(transitId, transitTypeId, transit);
   };
 
   // Get unique aspect types for the filter
@@ -89,6 +99,12 @@ const SimplifiedAspectSection = ({
       [Planet.PLUTO]: "♇",
     };
     return planetSymbols[planet] || planet.charAt(0);
+  };
+
+  // Get keywords for a specific planet
+  const renderPlanetKeywords = (planet: Planet) => {
+    const keywords = PLANET_KEYWORDS[planet] || [];
+    return keywords.join(", ");
   };
 
   if (isLoading) {
@@ -229,11 +245,23 @@ const SimplifiedAspectSection = ({
                   </div>
                 </div>
 
-                <p className="description">
-                  {transit.description?.length > 100
-                    ? `${transit.description.slice(0, 100)}...`
-                    : transit.description}
-                </p>
+                <div className="keywords-container">
+                  <div className="planet-keywords">
+                    <span className="planet-name">{transit.planetA}:</span>
+                    <span className="keywords">
+                      {renderPlanetKeywords(transit.planetA)}
+                    </span>
+                  </div>
+
+                  {transit.planetB && (
+                    <div className="planet-keywords">
+                      <span className="planet-name">{transit.planetB}:</span>
+                      <span className="keywords">
+                        {renderPlanetKeywords(transit.planetB)}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="card-actions">
@@ -254,7 +282,12 @@ const SimplifiedAspectSection = ({
                   variant="accent"
                   icon="✏️"
                   onClick={(e) =>
-                    handleAddJournal(transit.id, transit.transitTypeId || "", e)
+                    handleAddJournal(
+                      transit.id,
+                      transit.transitTypeId || "",
+                      transit,
+                      e
+                    )
                   }
                 >
                   Add Entry

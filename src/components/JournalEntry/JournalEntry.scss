@@ -42,6 +42,59 @@
   form {
     padding: $spacing-md;
 
+    // Journal prompts section
+    .journal-prompts {
+      background-color: rgba($accent, 0.05);
+      border-radius: $border-radius;
+      padding: $spacing-md;
+      margin-bottom: $spacing-md;
+      border-left: 3px solid $accent;
+
+      .prompts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $spacing-sm;
+
+        h4 {
+          margin: 0;
+          color: $accent;
+          font-size: $font-size-base;
+          font-weight: 600;
+        }
+
+        .toggle-prompts {
+          background: none;
+          border: 1px solid $accent;
+          color: $accent;
+          font-size: $font-size-sm;
+          padding: 2px $spacing-xs;
+          border-radius: $border-radius-sm;
+          cursor: pointer;
+          transition: all $transition-fast;
+
+          &:hover {
+            background-color: rgba($accent, 0.1);
+          }
+        }
+      }
+
+      .prompts-list {
+        margin: 0;
+        padding-left: $spacing-lg;
+
+        li {
+          margin-bottom: $spacing-xs;
+          color: $text-secondary;
+          font-style: italic;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+
     .form-group {
       margin-bottom: $spacing-md;
 
@@ -107,6 +160,40 @@
           outline: none;
           border-color: $primary;
           box-shadow: 0 0 0 2px rgba($primary, 0.2);
+        }
+      }
+
+      // Suggested tags
+      .suggested-tags {
+        margin-top: $spacing-xs;
+
+        .suggested-label {
+          display: block;
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          margin-bottom: $spacing-xs;
+        }
+
+        .tag-buttons {
+          display: flex;
+          flex-wrap: wrap;
+          gap: $spacing-xs;
+
+          .tag-button {
+            background-color: rgba($secondary, 0.1);
+            border: 1px solid rgba($secondary, 0.3);
+            color: $secondary;
+            font-size: $font-size-sm;
+            padding: 2px $spacing-xs;
+            border-radius: $border-radius-sm;
+            cursor: pointer;
+            transition: all $transition-fast;
+
+            &:hover {
+              background-color: rgba($secondary, 0.2);
+              border-color: $secondary;
+            }
+          }
         }
       }
     }

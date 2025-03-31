@@ -56,6 +56,94 @@
     display: flex;
     flex-direction: column;
 
+    .keywords-section {
+      order: 1;
+      margin-bottom: $spacing-md;
+
+      h3 {
+        color: $primary;
+        font-size: $font-size-lg;
+        margin-top: 0;
+        margin-bottom: $spacing-sm;
+        padding-bottom: $spacing-xs;
+        border-bottom: 1px solid $border-color;
+      }
+
+      .keywords-container {
+        padding: $spacing-md;
+        background-color: rgba($primary, 0.05);
+        border-radius: $border-radius;
+        margin-bottom: $spacing-md;
+
+        .planet-keyword-item {
+          display: flex;
+          align-items: baseline;
+          margin-bottom: $spacing-xs;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .planet-name {
+            font-weight: 600;
+            color: $primary;
+            min-width: 80px;
+            margin-right: $spacing-xs;
+          }
+
+          .keywords {
+            color: $text-primary;
+          }
+        }
+
+        .aspect-context {
+          margin-top: $spacing-sm;
+          padding-top: $spacing-sm;
+          border-top: 1px dashed rgba($border-color, 0.8);
+
+          .aspect-label {
+            font-weight: 600;
+            color: $primary;
+            margin-right: $spacing-xs;
+          }
+
+          .aspect-meaning {
+            color: $text-primary;
+            font-style: italic;
+          }
+        }
+      }
+
+      .journal-prompts {
+        background-color: $surface;
+        padding: $spacing-md;
+        border-radius: $border-radius;
+        border-left: 3px solid $accent;
+
+        h4 {
+          color: $accent;
+          margin-top: 0;
+          margin-bottom: $spacing-sm;
+          font-size: $font-size-base;
+        }
+
+        ul {
+          margin: 0;
+          padding-left: $spacing-lg;
+
+          li {
+            margin-bottom: $spacing-xs;
+            font-style: italic;
+            color: $text-secondary;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+
     .description-section {
       order: 2;
       margin-bottom: $spacing-md;
@@ -109,7 +197,7 @@
     }
 
     .journal-section {
-      order: 1; // Make this appear first in flex layout
+      order: 4; // Changed from 1 to appear last
       flex: 1;
       min-height: 250px;
       display: flex;

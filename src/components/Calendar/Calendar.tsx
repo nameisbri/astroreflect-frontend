@@ -46,6 +46,9 @@ const Calendar = () => {
   const [selectedJournalTransit, setSelectedJournalTransit] = useState<{
     transitId: string;
     transitTypeId: string;
+    planetA?: Planet;
+    planetB?: Planet;
+    aspect?: string;
   } | null>(null);
   const [showTransitDetail, setShowTransitDetail] = useState(false);
   const [showEntryModal, setShowEntryModal] = useState(false);
@@ -113,9 +116,21 @@ const Calendar = () => {
     return entriesCount;
   };
 
-  // Add these functions inside the Calendar component
-  const handleAddJournal = (transitId: string, transitTypeId: string) => {
-    setSelectedJournalTransit({ transitId, transitTypeId });
+  // Handle journal entry form modal with planet information
+  const handleAddJournal = (
+    transitId: string,
+    transitTypeId: string,
+    planetA?: Planet,
+    planetB?: Planet,
+    aspect?: string
+  ) => {
+    setSelectedJournalTransit({
+      transitId,
+      transitTypeId,
+      planetA,
+      planetB,
+      aspect,
+    });
     setShowJournalForm(true);
     // Close the transit detail if it's open
     setSelectedTransit(null);
@@ -499,7 +514,11 @@ const Calendar = () => {
                       const transitTypeId = `${position.planet}_IN_${
                         position.sign?.name || "Aries"
                       }`;
-                      handleAddJournal(placeholderId, transitTypeId);
+                      handleAddJournal(
+                        placeholderId,
+                        transitTypeId,
+                        position.planet
+                      );
                     }}
                   >
                     Add Entry
@@ -536,33 +555,6 @@ const Calendar = () => {
           })}
         </div>
       </div>
-    );
-  };
-
-  // Get detailed interpretation for a transit
-  const getDetailedInterpretation = (
-    planetA: Planet,
-    aspect: string,
-    planetB: Planet
-  ): string => {
-    // This function would ideally contain interpretations for different planet-aspect combinations
-    // For now, we'll return a generic interpretation based on the aspect type
-
-    const aspectInterpretations: Record<string, string> = {
-      "Conjunction": `When ${planetA} and ${planetB} join forces, their energies merge and intensify. This creates a potent blend of their qualities, bringing focus and emphasis to matters ruled by both planets. This is a time for new beginnings related to these planetary energies.`,
-
-      "Trine": `${planetA} and ${planetB} are in a harmonious flow, creating ease and opportunity. Their energies support each other, bringing natural talents and favorable conditions. This aspect helps you access the positive qualities of both planets with minimal effort.`,
-
-      "Square": `${planetA} and ${planetB} are in a challenging relationship, creating tension and friction. This dynamic aspect pushes you to take action and overcome obstacles, potentially leading to significant growth through resolving the conflict between these planetary energies.`,
-
-      "Opposition": `${planetA} and ${planetB} face each other across the zodiac, creating a polarizing effect. This aspect brings awareness through contrast and the need for balance. You may experience tension between the principles these planets represent, requiring integration and compromise.`,
-
-      "Sextile": `${planetA} forms a supportive angle with ${planetB}, offering opportunities for growth and development. This aspect creates a gentle flow of energy between the planets, providing resources and chances to build upon. Taking initiative during this time can lead to positive outcomes.`,
-    };
-
-    return (
-      aspectInterpretations[aspect] ||
-      `This ${aspect} between ${planetA} and ${planetB} brings their energies together in a specific pattern. Pay attention to themes related to both planets in your life during this period.`
     );
   };
 
@@ -606,15 +598,21 @@ const Calendar = () => {
           setEntryModalData(modalData);
           setShowEntryModal(true);
         }}
-        onAddJournal={(transitId, transitTypeId) => {
+        onAddJournal={(transitId, transitTypeId, transit) => {
           console.log(
-            "Calendar: onAddJournal called with:",
-            transitId,
-            transitTypeId
+            "Calendar: onAddJournal called with transit:",
+            transit?.planetA,
+            transit?.aspect,
+            transit?.planetB
           );
 
-          setSelectedJournalTransit({ transitId, transitTypeId });
-          setShowJournalForm(true);
+          handleAddJournal(
+            transitId,
+            transitTypeId,
+            transit?.planetA,
+            transit?.planetB,
+            transit?.aspect
+          );
         }}
       />
     );
@@ -749,6 +747,9 @@ const Calendar = () => {
             <JournalEntryForm
               transitId={selectedJournalTransit.transitId}
               transitTypeId={selectedJournalTransit.transitTypeId}
+              planetA={selectedJournalTransit.planetA}
+              planetB={selectedJournalTransit.planetB}
+              aspect={selectedJournalTransit.aspect}
               onSave={handleSaveJournal}
               onCancel={() => setShowJournalForm(false)}
             />
@@ -763,8 +764,20 @@ const Calendar = () => {
             <SimplifiedEntryModal
               data={entryModalData}
               onClose={handleCloseEntryModal}
-              onAddJournal={(transitId, transitTypeId) => {
-                handleAddJournal(transitId, transitTypeId);
+              onAddJournal={(
+                transitId,
+                transitTypeId,
+                planetA,
+                planetB,
+                aspect
+              ) => {
+                handleAddJournal(
+                  transitId,
+                  transitTypeId,
+                  planetA,
+                  planetB,
+                  aspect
+                );
                 handleCloseEntryModal();
               }}
             />
