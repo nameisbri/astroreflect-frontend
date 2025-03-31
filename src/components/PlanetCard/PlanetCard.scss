@@ -1,0 +1,352 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.planet-card {
+  background-color: $surface;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow;
+  margin-bottom: $spacing-md;
+  overflow: hidden;
+  transition: all $transition;
+
+  &.expanded {
+    box-shadow: $shadow-lg;
+  }
+
+  .planet-header {
+    display: flex;
+    align-items: center;
+    padding: $spacing-md;
+    background-color: rgba($primary, 0.05);
+    cursor: pointer;
+    transition: background-color $transition-fast;
+    position: relative;
+
+    &:hover {
+      background-color: rgba($primary, 0.1);
+    }
+
+    .planet-symbol {
+      font-size: $font-size-xl;
+      color: $primary;
+      margin-right: $spacing-md;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba($primary, 0.1);
+      border-radius: 50%;
+    }
+
+    .planet-name {
+      flex: 1;
+      font-size: $font-size-lg;
+      font-weight: 600;
+      color: $text-primary;
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+
+      .aspect-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 4px;
+        background-color: rgba($primary, 0.1);
+        color: $primary;
+        font-size: $font-size-sm;
+        border-radius: 10px;
+        font-weight: 500;
+      }
+    }
+
+    .retrograde-status {
+      background-color: rgba($accent, 0.1);
+      color: $accent;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-sm;
+      font-weight: 500;
+      margin-right: $spacing-md;
+    }
+
+    .expand-icon {
+      color: $primary;
+      font-size: $font-size-sm;
+    }
+  }
+
+  .planet-position {
+    padding: $spacing-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid $border-color;
+
+    .position-sign {
+      display: flex;
+      flex-direction: column;
+
+      .position-label {
+        font-size: $font-size-base;
+        font-weight: 500;
+      }
+
+      .position-date {
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        margin-top: $spacing-xs;
+      }
+    }
+
+    .position-actions {
+      display: flex;
+      gap: $spacing-sm;
+    }
+  }
+
+  .planet-aspects {
+    padding: $spacing-md;
+
+    h4 {
+      color: $primary;
+      font-size: $font-size-base;
+      margin-top: 0;
+      margin-bottom: $spacing-md;
+      padding-bottom: $spacing-xs;
+      border-bottom: 1px dashed rgba($border-color, 0.5);
+    }
+
+    .aspects-list {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-md;
+    }
+
+    .aspect-item {
+      background-color: rgba($surface, 0.6);
+      border-radius: $border-radius;
+      padding: $spacing-sm;
+      box-shadow: $shadow-sm;
+      border-left: 3px solid $primary;
+
+      &.conjunction {
+        border-left-color: #5e35b1;
+      }
+
+      &.trine {
+        border-left-color: #2e7d32;
+      }
+
+      &.square {
+        border-left-color: #c62828;
+      }
+
+      &.opposition {
+        border-left-color: #ad1457;
+      }
+
+      &.sextile {
+        border-left-color: #0277bd;
+      }
+
+      .aspect-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $spacing-xs;
+
+        .aspect-planets {
+          display: flex;
+          align-items: center;
+          gap: $spacing-xs;
+
+          .aspect-symbol {
+            font-size: $font-size-base;
+          }
+
+          .other-planet {
+            font-weight: 600;
+          }
+        }
+
+        .timing-badge {
+          font-size: $font-size-sm;
+          padding: 2px $spacing-xs;
+          border-radius: $border-radius-sm;
+          color: white;
+          background-color: $color-silver;
+
+          &.active {
+            background-color: $accent;
+          }
+
+          &.applying {
+            background-color: $primary;
+          }
+
+          &.separating {
+            background-color: $secondary;
+          }
+
+          &.upcoming {
+            background-color: $color-silver;
+            color: $text-secondary;
+          }
+        }
+      }
+
+      .aspect-dates {
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        margin-bottom: $spacing-sm;
+
+        .exact-date {
+          font-weight: 500;
+        }
+      }
+
+      .aspect-actions {
+        display: flex;
+        gap: $spacing-sm;
+        margin-top: $spacing-xs;
+      }
+    }
+  }
+
+  .no-aspects-message {
+    padding: $spacing-md;
+    text-align: center;
+    color: $text-secondary;
+    font-style: italic;
+  }
+}
+
+// Planet-specific styling
+.sun-card .planet-header {
+  background-color: rgba($accent, 0.08);
+  .planet-symbol {
+    background-color: rgba($accent, 0.15);
+    color: $accent;
+  }
+}
+
+.moon-card .planet-header {
+  background-color: rgba($primary, 0.08);
+  .planet-symbol {
+    background-color: rgba($primary, 0.15);
+    color: $primary;
+  }
+}
+
+.mercury-card .planet-header {
+  background-color: rgba($secondary, 0.08);
+  .planet-symbol {
+    background-color: rgba($secondary, 0.15);
+    color: $secondary;
+  }
+}
+
+.venus-card .planet-header {
+  background-color: rgba($color-coral, 0.08);
+  .planet-symbol {
+    background-color: rgba($color-coral, 0.15);
+    color: $color-coral;
+  }
+}
+
+.mars-card .planet-header {
+  background-color: rgba(#e74c3c, 0.08);
+  .planet-symbol {
+    background-color: rgba(#e74c3c, 0.15);
+    color: #e74c3c;
+  }
+}
+
+.jupiter-card .planet-header {
+  background-color: rgba($color-palatinate, 0.08);
+  .planet-symbol {
+    background-color: rgba($color-palatinate, 0.15);
+    color: $color-palatinate;
+  }
+}
+
+.saturn-card .planet-header {
+  background-color: rgba($color-hookers-green, 0.08);
+  .planet-symbol {
+    background-color: rgba($color-hookers-green, 0.15);
+    color: $color-hookers-green;
+  }
+}
+
+.uranus-card .planet-header {
+  background-color: rgba(#3498db, 0.08);
+  .planet-symbol {
+    background-color: rgba(#3498db, 0.15);
+    color: #3498db;
+  }
+}
+
+.neptune-card .planet-header {
+  background-color: rgba(#9b59b6, 0.08);
+  .planet-symbol {
+    background-color: rgba(#9b59b6, 0.15);
+    color: #9b59b6;
+  }
+}
+
+.pluto-card .planet-header {
+  background-color: rgba(#34495e, 0.08);
+  .planet-symbol {
+    background-color: rgba(#34495e, 0.15);
+    color: #34495e;
+  }
+}
+
+// Media queries for responsiveness
+@media (max-width: $breakpoint-md) {
+  .planet-card {
+    .planet-position {
+      flex-direction: column;
+      align-items: stretch;
+      gap: $spacing-sm;
+
+      .position-sign {
+        margin-bottom: $spacing-sm;
+      }
+
+      .position-actions {
+        justify-content: space-between;
+      }
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .planet-card {
+    .planet-header {
+      padding: $spacing-sm;
+
+      .planet-symbol {
+        width: 32px;
+        height: 32px;
+        margin-right: $spacing-sm;
+      }
+    }
+
+    .planet-aspects {
+      padding: $spacing-sm;
+
+      .aspect-item {
+        .aspect-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: $spacing-xs;
+        }
+      }
+    }
+  }
+}

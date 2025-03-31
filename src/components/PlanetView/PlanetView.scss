@@ -1,0 +1,205 @@
+@use "../../styles/scss/variables" as *;
+@use "../../styles/scss/mixins" as *;
+
+.planet-view {
+  margin-bottom: $spacing-xl;
+
+  .loading-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: $spacing-xl;
+    color: $text-secondary;
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba($primary, 0.2);
+      border-radius: 50%;
+      border-top-color: $primary;
+      animation: spin 1s linear infinite;
+      margin-bottom: $spacing-md;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: $spacing-lg;
+    background-color: $surface;
+    border-radius: $border-radius;
+    box-shadow: $shadow;
+    color: $text-secondary;
+    font-style: italic;
+  }
+
+  .planet-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+    margin-bottom: $spacing-md;
+    padding: $spacing-md;
+    background-color: $surface;
+    border-radius: $border-radius;
+    box-shadow: $shadow-sm;
+
+    .filter-btn {
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $border-radius-sm;
+      border: 1px solid $border-color;
+      background-color: $background;
+      font-size: $font-size-sm;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all $transition-fast;
+
+      &:hover {
+        background-color: rgba($primary, 0.05);
+        border-color: $primary;
+      }
+
+      &.active {
+        background-color: $primary;
+        color: white;
+        border-color: $primary;
+      }
+
+      // Planet-specific colors
+      &.sun-filter.active {
+        background-color: $accent;
+        border-color: $accent;
+      }
+
+      &.moon-filter.active {
+        background-color: $primary;
+        border-color: $primary;
+      }
+
+      &.mercury-filter.active {
+        background-color: $secondary;
+        border-color: $secondary;
+      }
+
+      &.venus-filter.active {
+        background-color: $color-coral;
+        border-color: $color-coral;
+      }
+
+      &.mars-filter.active {
+        background-color: #e74c3c;
+        border-color: #e74c3c;
+      }
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+
+      .dropdown-toggle {
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $border-radius-sm;
+        border: 1px solid $border-color;
+        background-color: $background;
+        font-size: $font-size-sm;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+          background-color: rgba($primary, 0.05);
+          border-color: $primary;
+        }
+      }
+
+      .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 10;
+        min-width: 150px;
+        margin-top: $spacing-xs;
+        padding: $spacing-xs;
+        background-color: $background;
+        border-radius: $border-radius-sm;
+        box-shadow: $shadow;
+        border: 1px solid $border-color;
+        display: none;
+
+        .dropdown-item {
+          width: 100%;
+          text-align: left;
+          padding: $spacing-xs $spacing-sm;
+          border: none;
+          background: none;
+          font-size: $font-size-sm;
+          cursor: pointer;
+          transition: background-color $transition-fast;
+          border-radius: $border-radius-sm;
+
+          &:hover {
+            background-color: rgba($primary, 0.05);
+          }
+
+          &.active {
+            background-color: rgba($primary, 0.1);
+            font-weight: 500;
+          }
+        }
+      }
+
+      &:hover .dropdown-menu {
+        display: block;
+      }
+    }
+  }
+
+  .planets-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-md;
+
+    .planet-card-wrapper {
+      flex: 1 1 300px;
+      min-width: 300px;
+      max-width: 100%;
+    }
+  }
+}
+
+// Media queries for responsiveness
+@media (max-width: $breakpoint-md) {
+  .planet-view {
+    .planet-filters {
+      padding: $spacing-sm;
+      justify-content: center;
+    }
+
+    .planets-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: $breakpoint-sm) {
+  .planet-view {
+    .planet-filters {
+      flex-direction: column;
+      align-items: stretch;
+      gap: $spacing-xs;
+
+      .filter-btn,
+      .dropdown-toggle {
+        width: 100%;
+      }
+
+      .dropdown-menu {
+        width: 100%;
+      }
+    }
+  }
+}

@@ -22,11 +22,11 @@ import {
   PlanetPosition,
   JournalEntry,
 } from "../../types/astrology";
-import ActionButton from "../ActionButton/ActionButton";
 import { formatShortDate } from "../../utils/dateUtils";
+import { parseFlexibleDate } from "../../utils/dateUtils";
 import JournalEntryForm from "../JournalEntry/JournalEntryForm";
-import SimplifiedAspectSection from "../SimplifiedAspectSection/SimplifiedAspectSection";
 import SimplifiedEntryModal from "../SimplifiedEntryModal/SimplifiedEntryModal";
+import PlanetView from "../PlanetView/PlanetView";
 import { v4 as uuidv4 } from "uuid";
 
 const Calendar = () => {
@@ -38,8 +38,6 @@ const Calendar = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedDayTransits, setSelectedDayTransits] = useState<Transit[]>([]);
-  const [selectedTransit, setSelectedTransit] = useState<Transit | null>(null);
-  const [aspectFilter, setAspectFilter] = useState<string>("all");
   const [journalEntriesByDay, setJournalEntriesByDay] = useState<
     Record<string, JournalEntry[]>
   >({});
@@ -51,7 +49,6 @@ const Calendar = () => {
     planetB?: Planet;
     aspect?: string;
   } | null>(null);
-  const [showTransitDetail, setShowTransitDetail] = useState(false);
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [entryModalData, setEntryModalData] = useState<any>(null);
 
@@ -69,7 +66,23 @@ const Calendar = () => {
 
         // Fetch journal entries for the week
         const entriesData = await fetchJournalEntriesForDateRange(start, end);
-        setJournalEntriesByDay(entriesData);
+
+        // Process the entries data to ensure dates are properly parsed
+        const processedEntriesData: Record<string, JournalEntry[]> = {};
+
+        // Process each day's entries
+        Object.entries(entriesData).forEach(([day, entries]) => {
+          // Properly parse the dates for each entry
+          const processedEntries = entries.map((entry) => ({
+            ...entry,
+            createdAt: parseFlexibleDate(entry.createdAt) || entry.createdAt,
+            updatedAt: parseFlexibleDate(entry.updatedAt) || entry.updatedAt,
+          }));
+
+          processedEntriesData[day] = processedEntries;
+        });
+
+        setJournalEntriesByDay(processedEntriesData);
       } catch (err) {
         console.error("Failed to fetch transits:", err);
         setError("Failed to load transits. Please try again later.");
@@ -96,29 +109,25 @@ const Calendar = () => {
   const getJournalEntriesCountByTransitType = () => {
     const entriesCount: Record<string, number> = {};
 
-    if (selectedDay) {
-      // Iterate through all entries in journalEntriesByDay
-      Object.values(journalEntriesByDay).forEach((dayEntries) => {
-        dayEntries.forEach((entry) => {
-          if (entry.transitTypeId) {
-            entriesCount[entry.transitTypeId] =
-              (entriesCount[entry.transitTypeId] || 0) + 1;
-          }
-        });
-      });
-
-      // Generate planet-in-sign transit types for all positions
-      planetPositions.forEach((position) => {
-        const transitTypeId = `${position.planet}_IN_${
-          position.sign?.name || "Aries"
-        }`;
-        if (!entriesCount[transitTypeId]) {
-          entriesCount[transitTypeId] = 0;
+    // Iterate through all entries in journalEntriesByDay
+    Object.values(journalEntriesByDay).forEach((dayEntries) => {
+      dayEntries.forEach((entry) => {
+        if (entry.transitTypeId) {
+          entriesCount[entry.transitTypeId] =
+            (entriesCount[entry.transitTypeId] || 0) + 1;
         }
       });
+    });
 
-      console.log("Journal entries by transit type:", entriesCount);
-    }
+    // Generate planet-in-sign transit types for all positions
+    planetPositions.forEach((position) => {
+      const transitTypeId = `${position.planet}_IN_${
+        position.sign?.name || "Aries"
+      }`;
+      if (!entriesCount[transitTypeId]) {
+        entriesCount[transitTypeId] = 0;
+      }
+    });
 
     return entriesCount;
   };
@@ -139,9 +148,10 @@ const Calendar = () => {
       aspect,
     });
     setShowJournalForm(true);
-    // Close the transit detail if it's open
-    setSelectedTransit(null);
-    setShowTransitDetail(false);
+
+    // Close the entry modal if it's open
+    setShowEntryModal(false);
+    setEntryModalData(null);
   };
 
   const handleSaveJournal = async () => {
@@ -152,6 +162,8 @@ const Calendar = () => {
     if (selectedDay) {
       try {
         const entries = await fetchJournalEntriesByDate(selectedDay);
+
+        // Use entries as-is without additional processing
         const dayKey = format(selectedDay, "yyyy-MM-dd");
         setJournalEntriesByDay((prev) => ({
           ...prev,
@@ -162,7 +174,8 @@ const Calendar = () => {
       }
     }
   };
-  // New function to handle viewing entries with simplified modal
+
+  // Function to handle viewing entries with the modal
   const handleViewEntries = (
     data: any,
     isPlanetPosition: boolean = false,
@@ -185,25 +198,12 @@ const Calendar = () => {
 
     setEntryModalData(modalData);
     setShowEntryModal(true);
-
-    // Make sure other modals are closed
-    setShowJournalForm(false);
   };
 
   // Function to close the entry modal
   const handleCloseEntryModal = () => {
     setShowEntryModal(false);
     setEntryModalData(null);
-  };
-
-  const handleViewTransitDetail = (transit: Transit) => {
-    setSelectedTransit(transit);
-    setShowTransitDetail(true);
-  };
-
-  const handleCloseTransitDetail = () => {
-    setSelectedTransit(null);
-    setShowTransitDetail(false);
   };
 
   // Function to navigate to today
@@ -273,6 +273,9 @@ const Calendar = () => {
       const dayKey = format(day, "yyyy-MM-dd");
       if (!journalEntriesByDay[dayKey]) {
         const entries = await fetchJournalEntriesByDate(day);
+
+        // Don't try to process the entries - use them as-is
+        // The API is already returning dates in ISO format
         setJournalEntriesByDay((prev) => ({
           ...prev,
           [dayKey]: entries,
@@ -341,303 +344,6 @@ const Calendar = () => {
     );
   };
 
-  // Get an icon/symbol for the planet
-  const getPlanetSymbol = (planet: Planet) => {
-    const planetSymbols: Record<Planet, string> = {
-      [Planet.SUN]: "☉",
-      [Planet.MOON]: "☽",
-      [Planet.MERCURY]: "☿",
-      [Planet.VENUS]: "♀",
-      [Planet.MARS]: "♂",
-      [Planet.JUPITER]: "♃",
-      [Planet.SATURN]: "♄",
-      [Planet.URANUS]: "♅",
-      [Planet.NEPTUNE]: "♆",
-      [Planet.PLUTO]: "♇",
-    };
-    return planetSymbols[planet] || planet.charAt(0);
-  };
-
-  // Get an icon/symbol for the aspect
-  const getAspectSymbol = (aspect: string) => {
-    const aspectSymbols: Record<string, string> = {
-      "Conjunction": "☌",
-      "Sextile": "⚹",
-      "Square": "□",
-      "Trine": "△",
-      "Opposition": "☍",
-    };
-    return aspectSymbols[aspect] || aspect.charAt(0);
-  };
-
-  // Get ordinal suffix for numbers (1st, 2nd, 3rd, etc.)
-  const getOrdinalSuffix = (num: number): string => {
-    const j = num % 10;
-    const k = num % 100;
-
-    if (j === 1 && k !== 11) {
-      return "st";
-    }
-    if (j === 2 && k !== 12) {
-      return "nd";
-    }
-    if (j === 3 && k !== 13) {
-      return "rd";
-    }
-    return "th";
-  };
-
-  // Estimate the direct date for a retrograde planet if not provided
-  const estimateDirectDate = (planet: Planet): Date => {
-    const today = new Date();
-    // Approximate durations of retrograde periods in days
-    const retrogradeDurations: Record<Planet, number> = {
-      [Planet.MERCURY]: 24,
-      [Planet.VENUS]: 42,
-      [Planet.MARS]: 72,
-      [Planet.JUPITER]: 120,
-      [Planet.SATURN]: 140,
-      [Planet.URANUS]: 155,
-      [Planet.NEPTUNE]: 158,
-      [Planet.PLUTO]: 160,
-      [Planet.SUN]: 0, // Sun and Moon don't go retrograde
-      [Planet.MOON]: 0,
-    };
-
-    // Add half the retrograde duration to today to estimate when it goes direct
-    const duration = retrogradeDurations[planet] || 0;
-    const result = new Date(today);
-    result.setDate(result.getDate() + Math.floor(duration / 2));
-    return result;
-  };
-
-  // Get a symbol for the zodiac sign
-  const getZodiacSymbol = (sign: string) => {
-    const signSymbols: Record<string, string> = {
-      "Aries": "♈",
-      "Taurus": "♉",
-      "Gemini": "♊",
-      "Cancer": "♋",
-      "Leo": "♌",
-      "Virgo": "♍",
-      "Libra": "♎",
-      "Scorpio": "♏",
-      "Sagittarius": "♐",
-      "Capricorn": "♑",
-      "Aquarius": "♒",
-      "Pisces": "♓",
-    };
-    return signSymbols[sign] || sign.charAt(0);
-  };
-
-  // Helper for sorting planets by traditional astrological importance
-  const getPlanetImportance = (planet: Planet): number => {
-    const order = [
-      Planet.SUN,
-      Planet.MOON,
-      Planet.MERCURY,
-      Planet.VENUS,
-      Planet.MARS,
-      Planet.JUPITER,
-      Planet.SATURN,
-      Planet.URANUS,
-      Planet.NEPTUNE,
-      Planet.PLUTO,
-    ];
-    return order.indexOf(planet);
-  };
-
-  // Render the planet positions grid for the selected day
-  const renderPlanetPositions = () => {
-    if (!selectedDay || planetPositions.length === 0) {
-      if (isLoadingDay) {
-        return (
-          <div className="loading-positions">Loading planet positions...</div>
-        );
-      }
-      return null;
-    }
-
-    return (
-      <div className="planet-positions">
-        <h3>
-          Planet Positions for {format(selectedDay, "EEEE, MMMM d, yyyy")}
-        </h3>
-        <div className="planet-grid">
-          {planetPositions.map((position, index) => {
-            // Determine planet-specific class for styling
-            const planetClass = `${position.planet.toLowerCase()}-card`;
-
-            return (
-              <div key={index} className={`planet-card ${planetClass}`}>
-                <div className="planet-header">
-                  <div className="planet-symbol">
-                    {getPlanetSymbol(position.planet)}
-                  </div>
-                  <div className="planet-name">{position.planet}</div>
-                  {position.retrograde?.isRetrograde && (
-                    <div className="retrograde-status">Retrograde</div>
-                  )}
-                </div>
-
-                <div className="position-details">
-                  <div className="position-sign">
-                    <div className="detail-label">Sign</div>
-                    <div className="detail-value">
-                      {getZodiacSymbol(position.sign?.name || "Aries")}{" "}
-                      {position.sign?.name || "Aries"}{" "}
-                      {position.sign?.degreeInSign
-                        ? `(${Math.floor(position.sign.degreeInSign)}°)`
-                        : ""}
-                    </div>
-                    {position.signDuration && (
-                      <div className="date-range">
-                        In {position.sign?.name} until{" "}
-                        {formatShortDate(position.signDuration.exitDate)}
-                      </div>
-                    )}
-                  </div>
-
-                  {position.house && (
-                    <div className="position-house">
-                      <div className="detail-label">House</div>
-                      <div className="detail-value">
-                        {position.house.number || "1"}
-                        {getOrdinalSuffix(position.house.number || 1)} House
-                      </div>
-                    </div>
-                  )}
-
-                  {position.retrograde?.isRetrograde && (
-                    <div className="position-retrograde">
-                      <div className="detail-label">Retrograde</div>
-                      <div className="retrograde-until">
-                        Until{" "}
-                        {formatShortDate(estimateDirectDate(position.planet))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="planet-actions">
-                  <ActionButton
-                    variant="accent"
-                    icon="✏️"
-                    onClick={() => {
-                      // Create a placeholder transit for planet position entries
-                      const placeholderId = uuidv4();
-                      const transitTypeId = `${position.planet}_IN_${
-                        position.sign?.name || "Aries"
-                      }`;
-                      handleAddJournal(
-                        placeholderId,
-                        transitTypeId,
-                        position.planet
-                      );
-                    }}
-                  >
-                    Add Entry
-                  </ActionButton>
-
-                  <ActionButton
-                    variant="secondary"
-                    icon="📓"
-                    badgeCount={
-                      getJournalEntriesCountByTransitType()[
-                        `${position.planet}_IN_${
-                          position.sign?.name || "Aries"
-                        }`
-                      ] || 0
-                    }
-                    onClick={(e) => {
-                      // Prepare data for the modal
-                      const modalData = {
-                        id: uuidv4(), // Generate a unique ID for this view
-                        transitTypeId: `${position.planet}_IN_${
-                          position.sign?.name || "Aries"
-                        }`,
-                        title: `${position.planet} in ${
-                          position.sign?.name || "Aries"
-                        }`,
-                        description: `${position.planet} is moving through ${
-                          position.sign?.name || "Aries"
-                        }, infusing ${position.planet.toLowerCase()}-related matters with ${(
-                          position.sign?.name || "Aries"
-                        ).toLowerCase()} qualities.`,
-                        planet: position.planet,
-                        sign: position.sign?.name || "Aries",
-                      };
-
-                      handleViewEntries(modalData, true, e);
-                    }}
-                  >
-                    View Entries
-                  </ActionButton>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
-  // Render the aspect transits (transits between two planets) for the selected day
-  const renderAspectTransits = () => {
-    if (!selectedDay) return null;
-
-    return (
-      <SimplifiedAspectSection
-        transits={selectedDayTransits}
-        isLoading={isLoadingDay}
-        selectedDay={selectedDay}
-        journalEntriesByTransitType={getJournalEntriesCountByTransitType()}
-        onViewTransit={(transit) => {
-          console.log(
-            "Calendar: onViewTransit called with transit:",
-            transit.id,
-            "type:",
-            transit.transitTypeId
-          );
-
-          // Make sure we have a transitTypeId - it's crucial for retrieving entries
-          if (!transit.transitTypeId) {
-            console.error("Missing transitTypeId for transit:", transit.id);
-            // You might want to show an error message to the user here
-            return;
-          }
-
-          // Modified to use the more appropriate simplified entry modal with clearer reference to transitTypeId
-          const modalData = {
-            ...transit,
-            title: `${transit.planetA} ${transit.aspect} ${transit.planetB}`,
-            // Ensure the transitTypeId is properly included
-            transitTypeId: transit.transitTypeId,
-          };
-
-          console.log("Setting modal data:", modalData);
-          setEntryModalData(modalData);
-          setShowEntryModal(true);
-        }}
-        onAddJournal={(transitId, transitTypeId, transit) => {
-          console.log(
-            "Calendar: onAddJournal called with transit:",
-            transit?.planetA,
-            transit?.aspect,
-            transit?.planetB
-          );
-
-          handleAddJournal(
-            transitId,
-            transitTypeId,
-            transit?.planetA,
-            transit?.planetB,
-            transit?.aspect
-          );
-        }}
-      />
-    );
-  };
   // Render calendar legend to explain the indicators
   const renderCalendarLegend = () => (
     <div className="calendar-legend">
@@ -756,8 +462,16 @@ const Calendar = () => {
           <div className="selected-date-header">
             <h3>{format(selectedDay, "EEEE, MMMM d, yyyy")}</h3>
           </div>
-          {renderPlanetPositions()}
-          {renderAspectTransits()}
+
+          {/* New Planet-centric view */}
+          <PlanetView
+            planetPositions={planetPositions}
+            transits={selectedDayTransits}
+            journalEntriesByTransitType={getJournalEntriesCountByTransitType()}
+            isLoading={isLoadingDay}
+            onAddJournal={handleAddJournal}
+            onViewEntries={handleViewEntries}
+          />
         </div>
       )}
 
@@ -778,7 +492,7 @@ const Calendar = () => {
         </div>
       )}
 
-      {/* Simplified Entry Modal - replaces both old modals */}
+      {/* Simplified Entry Modal */}
       {showEntryModal && entryModalData && (
         <div className="modal-overlay">
           <div className="modal-content">

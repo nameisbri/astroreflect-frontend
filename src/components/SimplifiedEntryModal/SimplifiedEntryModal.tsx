@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import {
   fetchJournalEntriesForTransit,
   fetchJournalEntriesForTransitType,
@@ -11,6 +11,7 @@ import {
   getSignMeaning,
   getSignPrompts,
 } from "../../utils/planetKeywords";
+import { parseFlexibleDate } from "../../utils/dateUtils";
 import "./SimplifiedEntryModal.scss";
 
 interface ModalData {
@@ -51,23 +52,19 @@ const SimplifiedEntryModal = ({
   const [error, setError] = useState<string | null>(null);
 
   // Improved date formatting function
-  const formatDateSafely = (dateValue: Date | string | undefined): string => {
-    if (!dateValue) return "Unknown date";
+  const formatDateSafely = (
+    dateValue: Date | string | undefined | null
+  ): string => {
+    const parsedDate = parseFlexibleDate(dateValue);
+
+    if (!parsedDate || isNaN(parsedDate.getTime())) {
+      return "Unknown date";
+    }
 
     try {
-      // Handle both Date objects and ISO strings
-      const dateObj =
-        typeof dateValue === "string" ? parseISO(dateValue) : dateValue;
-
-      // Verify the date is valid
-      if (isNaN(dateObj.getTime())) {
-        console.warn("Invalid date:", dateValue);
-        return "Unknown date";
-      }
-
-      return format(dateObj, "MMM d, yyyy");
+      return format(parsedDate, "MMM d, yyyy");
     } catch (error) {
-      console.error("Error formatting date:", error, dateValue);
+      console.error("Error formatting date:", error);
       return "Unknown date";
     }
   };
@@ -101,6 +98,13 @@ const SimplifiedEntryModal = ({
           }
         }
 
+        console.log("Raw journal entries from API:", entries);
+        if (entries.length > 0) {
+          console.log("First entry keys:", Object.keys(entries[0]));
+        }
+
+        // Don't try to modify the dates - the API already returns them in ISO format
+        // Just pass the entries through as-is
         setJournalEntries(entries);
       } catch (err) {
         console.error("Failed to fetch journal entries:", err);
@@ -123,7 +127,6 @@ const SimplifiedEntryModal = ({
   };
 
   // Get journal prompts based on the planets involved
-
   const getPrompts = () => {
     const planetA = data.planetA || data.planet;
     const planetB = data.planetB;
@@ -250,28 +253,41 @@ const SimplifiedEntryModal = ({
               </p>
             )}
 
-            {journalEntries.map((entry) => (
-              <div className="journal-entry" key={entry.id}>
-                <div className="entry-header">
-                  <span className="entry-date">
-                    {formatDateSafely(entry.createdAt)}
-                  </span>
-                  {entry.mood && (
-                    <span className="entry-mood">{entry.mood}</span>
+            {journalEntries.map((entry) => {
+              // Direct access to entry properties to handle the unusual API return format
+              // Use any to bypass TypeScript restrictions since we know the data structure
+              const rawEntry = entry as any;
+              const dateStr =
+                rawEntry.created_at || rawEntry.createdAt || "Unknown date";
+
+              // Debug log to see the entry structure
+              console.log("Entry object keys:", Object.keys(rawEntry));
+
+              return (
+                <div className="journal-entry" key={entry.id}>
+                  <div className="entry-header">
+                    <span className="entry-date">
+                      {typeof dateStr === "string"
+                        ? format(new Date(dateStr), "MMM d, yyyy")
+                        : "Unknown date"}
+                    </span>
+                    {entry.mood && (
+                      <span className="entry-mood">{entry.mood}</span>
+                    )}
+                  </div>
+                  <p className="entry-content">{entry.content}</p>
+                  {entry.tags && entry.tags.length > 0 && (
+                    <div className="entry-tags">
+                      {entry.tags.map((tag) => (
+                        <span key={tag} className="tag">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
-                <p className="entry-content">{entry.content}</p>
-                {entry.tags && entry.tags.length > 0 && (
-                  <div className="entry-tags">
-                    {entry.tags.map((tag) => (
-                      <span key={tag} className="tag">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
